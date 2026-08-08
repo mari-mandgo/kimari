@@ -52,7 +52,44 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
             <span className="absolute left-[7px] top-3 bottom-3 w-px bg-slate-200" aria-hidden />
           )}
 
-          <div className="space-y-8">
+          {(project.files ?? []).length > 0 && (
+          <section className="mb-9">
+            <h2 className="mb-3 text-[13px] font-bold tracking-widest text-slate-400">
+              資料・図面・写真
+            </h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {(project.files ?? []).map((f) => (
+                <figure key={f.stored} className="overflow-hidden rounded-xl bg-white shadow-sm">
+                  {f.mime === 'application/pdf' ? (
+                    <a
+                      href={`/api/share/${token}/files/${f.stored}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-28 items-center justify-center bg-slate-100 text-[12px] font-bold text-slate-600"
+                    >
+                      PDFを開く
+                    </a>
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`/api/share/${token}/files/${f.stored}`}
+                      alt={f.caption || ''}
+                      className="h-28 w-full object-cover"
+                    />
+                  )}
+                  <figcaption className="p-2">
+                    <span className="text-[10px] font-bold text-slate-400">{f.kind}</span>
+                    <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-slate-700">
+                      {f.caption}
+                    </p>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="space-y-8">
             {meetings.map((m, idx) => {
               const no = total - idx;
               const decided = pick(m.items, 'decision_no_cost');

@@ -9,6 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Item } from '@/app/api/analyze/route';
+import type { StoredFile } from './files';
 
 const DIR = path.join(process.cwd(), 'data', 'projects');
 
@@ -101,6 +102,8 @@ export type Project = {
   ownerId?: string;
   /** この現場に参加しているユーザー（施主は含まない） */
   memberUserIds?: string[];
+  /** 写真・図面・パース・見積など */
+  files?: StoredFile[];
   meetings: Meeting[];
   createdAt: string;
   updatedAt: string;

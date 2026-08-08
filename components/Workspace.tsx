@@ -9,6 +9,7 @@ import type { Project } from '@/lib/store';
 import Link from 'next/link';
 import ProjectSettings from '@/components/ProjectSettings';
 import FeedbackInbox from '@/components/FeedbackInbox';
+import FileBoard from '@/components/FileBoard';
 import type { PublicUser } from '@/lib/roles';
 
 const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
@@ -217,6 +218,8 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
         <FeedbackInbox project={project} />
 
         <ProjectSettings project={project} />
+
+        <FileBoard project={project} />
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
