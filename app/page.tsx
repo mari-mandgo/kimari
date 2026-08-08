@@ -2,8 +2,17 @@
 
 import { useState } from 'react';
 import type { AnalyzeResponse, Item } from './api/analyze/route';
+import type { DocumentsResponse } from './api/documents/route';
 import { SAMPLE_TRANSCRIPT, SAMPLE_NAMES } from '@/lib/sample';
 import { formatCost, USD_JPY } from '@/lib/pricing';
+
+const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
+
+const DOC_TABS = [
+  { key: 'owner', label: '施主へ', hint: '確認書。金額は書かない' },
+  { key: 'worker', label: '職人へ', hint: '作業指示。個人情報と金額は載せない' },
+  { key: 'internal', label: '社内保存', hint: '根拠と経緯を残す' },
+] as const;
 
 const CATEGORY = {
   cost_impact: { label: '金額に影響する変更', hint: '追加見積の対象', color: 'bg-rose-50 border-rose-200 text-rose-900' },
@@ -21,11 +30,43 @@ export default function Home() {
   const [res, setRes] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSent, setShowSent] = useState(false);
+  const [docs, setDocs] = useState<DocumentsResponse | null>(null);
+  const [docsLoading, setDocsLoading] = useState(false);
+  const [tab, setTab] = useState<(typeof DOC_TABS)[number]['key']>('owner');
+  const [lang, setLang] = useState('なし');
+  const [showTranslated, setShowTranslated] = useState(false);
+
+  async function makeDocs() {
+    if (!res) return;
+    setDocsLoading(true);
+    setError(null);
+    try {
+      const r = await fetch('/api/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: res.items,
+          summary: res.summary,
+          names: names.split(/[,、\s]+/).filter(Boolean),
+          lang: lang === 'なし' ? null : lang,
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? '失敗しました');
+      setDocs(j);
+      setShowTranslated(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setDocsLoading(false);
+    }
+  }
 
   async function run() {
     setLoading(true);
     setError(null);
     setRes(null);
+    setDocs(null);
     try {
       const r = await fetch('/api/analyze', {
         method: 'POST',
@@ -47,12 +88,10 @@ export default function Home() {
 
   const grouped = (c: Item['category']) => res?.items.filter((i) => i.category === c) ?? [];
   const totalTokens = res?.calls.reduce((a, b) => a + b.totalTokens, 0) ?? 0;
-  const totalCost =
-    res?.calls.reduce<number | null>((acc, c) => {
-      const v = c.costUsd ?? c.estCostUsd;
-      if (v === null || acc === null) return acc === null ? null : acc;
-      return acc + v;
-    }, 0) ?? null;
+  const allCalls = [...(res?.calls ?? []), ...(docs?.calls ?? [])];
+  const totalCost = allCalls.length
+    ? allCalls.reduce((acc, c) => acc + (c.costUsd ?? c.estCostUsd ?? 0), 0)
+    : null;
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -162,6 +201,71 @@ export default function Home() {
                   </div>
                 );
               })}
+            </section>
+
+            <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-5">
+              <h2 className="font-bold">この内容から、宛先別に3つの文書を作ります</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                同じ会話でも、施主・職人・社内で必要な情報は違います。金額と個人情報の出し分けもここで行います。
+              </p>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <button
+                  onClick={makeDocs}
+                  disabled={docsLoading}
+                  className="rounded-xl bg-slate-900 px-6 py-3 font-bold text-white disabled:opacity-40"
+                >
+                  {docsLoading ? '作成中…' : '3つの文書を作る'}
+                </button>
+                <label className="text-sm text-slate-600">
+                  職人向けの翻訳
+                  <select
+                    value={lang}
+                    onChange={(e) => setLang(e.target.value)}
+                    className="ml-2 rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                  >
+                    {LANGS.map((l) => (
+                      <option key={l}>{l}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {docs && (
+                <div className="mt-6">
+                  <div className="flex flex-wrap gap-2">
+                    {DOC_TABS.map((t) => (
+                      <button
+                        key={t.key}
+                        onClick={() => setTab(t.key)}
+                        className={`rounded-lg px-4 py-2 text-sm font-bold ${
+                          tab === t.key ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">
+                    {DOC_TABS.find((t) => t.key === tab)?.hint}
+                  </p>
+
+                  {tab === 'worker' && docs.workerTranslated && (
+                    <button
+                      onClick={() => setShowTranslated((v) => !v)}
+                      className="mt-3 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold"
+                    >
+                      {showTranslated ? '日本語に戻す' : `${docs.lang}で表示`}
+                    </button>
+                  )}
+
+                  <pre className="mt-3 max-h-[28rem] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-[13px] leading-relaxed whitespace-pre-wrap">
+                    {tab === 'worker' && showTranslated && docs.workerTranslated
+                      ? docs.workerTranslated
+                      : docs[tab]}
+                  </pre>
+                </div>
+              )}
             </section>
 
             <section className="mt-8">
