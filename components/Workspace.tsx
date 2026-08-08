@@ -8,6 +8,7 @@ import { formatCost } from '@/lib/pricing';
 import type { Project } from '@/lib/store';
 import Link from 'next/link';
 import ProjectSettings from '@/components/ProjectSettings';
+import FeedbackInbox from '@/components/FeedbackInbox';
 import type { PublicUser } from '@/lib/roles';
 
 const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
@@ -212,6 +213,8 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
             )}
           </div>
         </header>
+
+        <FeedbackInbox project={project} />
 
         <ProjectSettings project={project} />
 

@@ -28,6 +28,15 @@ export async function PATCH(req: Request, { params }: Ctx) {
   if (Array.isArray(body.members)) project.members = body.members;
   if (Array.isArray(body.stages)) project.stages = body.stages;
 
+  // 施主からの連絡を確認済みにする
+  if (body.markFeedbackRead) {
+    for (const m of project.meetings) {
+      for (const f of m.feedbacks ?? []) {
+        if (body.markFeedbackRead === 'all' || f.id === body.markFeedbackRead) f.read = true;
+      }
+    }
+  }
+
   if (body.meeting) {
     const incoming = body.meeting as Partial<Meeting>;
     const existing = incoming.id ? project.meetings.find((m) => m.id === incoming.id) : null;

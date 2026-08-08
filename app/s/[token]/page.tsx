@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { findByShareToken } from '@/lib/store';
 import type { Item } from '@/app/api/analyze/route';
+import FeedbackForm from '@/components/FeedbackForm';
 
 export const dynamic = 'force-dynamic';
 
@@ -126,6 +127,12 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                     {decided.length + costs.length + pendings.length === 0 && (
                       <p className="text-[14px] text-slate-500">この回の記録はまだ整理中です。</p>
                     )}
+
+                    <FeedbackForm
+                      token={token}
+                      meetingId={m.id}
+                      sentCount={(m.feedbacks ?? []).length}
+                    />
                   </div>
                 </article>
               );

@@ -165,11 +165,18 @@ export default function ProjectList({ me }: { me: PublicUser }) {
                 >
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="text-[17px] font-bold leading-snug">{p.name}</h3>
-                    {p.openEstimates > 0 && (
-                      <span className="shrink-0 rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-bold text-white">
-                        要見積 {p.openEstimates}
-                      </span>
-                    )}
+                    <div className="flex shrink-0 gap-1.5">
+                      {p.unreadFeedback > 0 && (
+                        <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[11px] font-bold text-white">
+                          施主から {p.unreadFeedback}
+                        </span>
+                      )}
+                      {p.openEstimates > 0 && (
+                        <span className="rounded-full bg-rose-600 px-2.5 py-1 text-[11px] font-bold text-white">
+                          要見積 {p.openEstimates}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <p className="mt-2 text-[13px] text-slate-500">
                     打ち合わせ {p.meetingCount}回

@@ -12,9 +12,23 @@ import type { Item } from '@/app/api/analyze/route';
 
 const DIR = path.join(process.cwd(), 'data', 'projects');
 
+/**
+ * 施主からの連絡。共有ページを見て気づいたことを、その場で送ってもらう。
+ * どの打ち合わせについての話かが紐づくので、「あの時の話ですけど」が消える。
+ */
+export type Feedback = {
+  id: string;
+  /** 名乗ってもらう。空でも送れる */
+  name: string;
+  body: string;
+  createdAt: string;
+  read: boolean;
+};
+
 export type Meeting = {
   id: string;
   date: string;
+  feedbacks?: Feedback[];
   transcript: string;
   items: Item[];
   summary: string;
@@ -95,6 +109,8 @@ export type Project = {
 export type ProjectSummary = {
   id: string;
   name: string;
+  /** 施主からの未読の連絡 */
+  unreadFeedback: number;
   meetingCount: number;
   lastMeetingDate: string | null;
   /** 未対応の要見積件数 */
@@ -154,9 +170,15 @@ function summarize(p: Project): ProjectSummary {
 
   const dates = p.meetings.map((m) => m.date).sort();
 
+  const unreadFeedback = p.meetings.reduce(
+    (n, m) => n + (m.feedbacks ?? []).filter((f) => !f.read).length,
+    0
+  );
+
   return {
     id: p.id,
     name: p.name,
+    unreadFeedback,
     meetingCount: p.meetings.length,
     lastMeetingDate: dates.length ? dates[dates.length - 1] : null,
     openEstimates,
