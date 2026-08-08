@@ -65,7 +65,8 @@ export default function Workspace({ project }: { project: Project }) {
   const [demoMode, setDemoMode] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [meetingId, setMeetingId] = useState<string | null>(null);
-  const [shareToken, setShareToken] = useState<string | null>(null);
+  /** 共有は現場単位。打ち合わせが増えるたびに同じURLへ積み上がる */
+  const [shareToken, setShareToken] = useState<string | null>(project.shareToken ?? null);
 
   // 待ち時間に「何をしているか」を出す。無言で42秒待たせない
   useEffect(() => {
@@ -94,10 +95,8 @@ export default function Workspace({ project }: { project: Project }) {
       if (r.ok) {
         const last = j.project.meetings[j.project.meetings.length - 1];
         const mine = meetingId ? j.project.meetings.find((m: { id: string }) => m.id === meetingId) : last;
-        if (mine) {
-          setMeetingId(mine.id);
-          setShareToken(mine.shareToken);
-        }
+        if (mine) setMeetingId(mine.id);
+        if (j.project.shareToken) setShareToken(j.project.shareToken);
       }
     } catch {
       // 保存の失敗で画面を止めない
@@ -409,7 +408,7 @@ export default function Workspace({ project }: { project: Project }) {
                   {shareToken && (
                     <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
                       <p className="text-[12px] font-bold text-slate-600">
-                        施主・職人へ渡す読み取り専用リンク
+                        施主へ渡すリンク（打ち合わせのたびに、ここへ積み上がります）
                       </p>
                       <div className="mt-1.5 flex flex-wrap items-center gap-2">
                         <code className="break-all text-[12px] text-slate-700">

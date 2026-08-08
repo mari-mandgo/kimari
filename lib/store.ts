@@ -36,6 +36,13 @@ export type Project = {
   name: string;
   /** マスク対象の固有名詞 */
   names: string[];
+  /**
+   * 現場ごとの共有トークン。
+   * 打ち合わせ単位ではなく現場単位で渡すことで、
+   * 施主は1つのURLをブックマークするだけで、打ち合わせが増えるたびに
+   * 内容が積み上がっていく。
+   */
+  shareToken: string;
   meetings: Meeting[];
   createdAt: string;
   updatedAt: string;
@@ -100,12 +107,21 @@ function summarize(p: Project): ProjectSummary {
   };
 }
 
+/** 古いデータには現場トークンが無いので、読み込み時に補う */
+function migrate(p: Project): Project {
+  if (!p.shareToken) {
+    p.shareToken = newId('s');
+    saveProject(p);
+  }
+  return p;
+}
+
 export function getProject(id: string): Project | null {
   ensureDir();
   const file = path.join(DIR, `${id}.json`);
   if (!fs.existsSync(file)) return null;
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8')) as Project;
+    return migrate(JSON.parse(fs.readFileSync(file, 'utf8')) as Project);
   } catch {
     return null;
   }
@@ -124,6 +140,7 @@ export function createProject(name: string, names: string[] = []): Project {
     id: newId('p'),
     name: name.trim() || '名称未設定の現場',
     names,
+    shareToken: newId('s'),
     meetings: [],
     createdAt: now,
     updatedAt: now,
@@ -138,14 +155,17 @@ export function deleteProject(id: string): boolean {
   return true;
 }
 
-/** 共有トークンから打ち合わせを引く。施主・職人向けの読み取り専用ページで使う */
-export function findByShareToken(token: string): { project: Project; meeting: Meeting } | null {
+/**
+ * 共有トークンから現場を引く。施主・職人向けの読み取り専用ページで使う。
+ * 現場のトークンでも、古い打ち合わせ単位のトークンでも引けるようにしてある。
+ */
+export function findByShareToken(token: string): Project | null {
   ensureDir();
   for (const f of fs.readdirSync(DIR).filter((x) => x.endsWith('.json'))) {
     try {
       const p = JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8')) as Project;
-      const m = p.meetings.find((x) => x.shareToken === token);
-      if (m) return { project: p, meeting: m };
+      if (p.shareToken === token) return migrate(p);
+      if (p.meetings.some((m) => m.shareToken === token)) return migrate(p);
     } catch {
       // 壊れたファイルは飛ばす
     }
