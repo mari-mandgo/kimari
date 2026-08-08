@@ -12,7 +12,12 @@ export type Item = {
   detail: string;
   reason: string;
   quote: string;
+  /** 次に動く人。誰が言い出したかではない */
   owner: string;
+  /** 会話に出てきた期限の表現（例: 次回まで）。無ければ空 */
+  due_text?: string;
+  /** 打ち合わせ日から換算した実際の日付。特定できなければ空 */
+  due_date?: string;
   needs_estimate: boolean;
 };
 
@@ -29,7 +34,12 @@ export type AnalyzeResponse = {
 
 export async function POST(req: Request) {
   try {
-    const { transcript, names = [], model = MODEL_AUTO } = await req.json();
+    const {
+      transcript,
+      names = [],
+      model = MODEL_AUTO,
+      meetingDate = new Date().toISOString().slice(0, 10),
+    } = await req.json();
 
     if (!transcript || typeof transcript !== 'string') {
       return NextResponse.json({ error: 'transcript がありません' }, { status: 400 });
@@ -43,7 +53,7 @@ export async function POST(req: Request) {
     const { data, meta } = await chat({
       task: 'extract',
       system: EXTRACT_SYSTEM,
-      user: extractUser(masked),
+      user: extractUser(masked, meetingDate),
       model,
       json: true,
     });

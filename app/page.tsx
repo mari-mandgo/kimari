@@ -58,6 +58,10 @@ export default function Home() {
   const [tab, setTab] = useState<(typeof DOC_TABS)[number]['key']>('owner');
   const [lang, setLang] = useState('なし');
   const [showTranslated, setShowTranslated] = useState(false);
+  const [meetingDate, setMeetingDate] = useState(() => new Date().toISOString().slice(0, 10));
+  /** 原価は本番では利用者に見せない。ハッカソンの審査用に切り替えられるようにしておく */
+  const [demoMode, setDemoMode] = useState(true);
+  const [copied, setCopied] = useState<string | null>(null);
 
   // 待ち時間に「何をしているか」を出す。無言で42秒待たせない
   useEffect(() => {
@@ -80,7 +84,12 @@ export default function Home() {
       const r = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript, names: nameList(), model: 'orcarouter/fusion-flash' }),
+        body: JSON.stringify({
+          transcript,
+          names: nameList(),
+          model: 'orcarouter/fusion-flash',
+          meetingDate,
+        }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? '失敗しました');
@@ -135,20 +144,34 @@ export default function Home() {
           <h1 className="text-[32px] font-bold tracking-tight">KIMARI</h1>
           <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
             打ち合わせの記録から、<strong className="text-slate-900">追加見積が必要な変更</strong>
-            を見つけます。議事録は作りません。
+            と<strong className="text-slate-900">期限</strong>を見つけます。
           </p>
         </header>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <label className="mb-2 block text-[13px] font-bold text-slate-700">
-            この案件の固有名詞（伏せる対象）
-          </label>
-          <input
-            value={names}
-            onChange={(e) => setNames(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
-            placeholder="田中, 株式会社◯◯"
-          />
+          <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
+            <div>
+              <label className="mb-2 block text-[13px] font-bold text-slate-700">打ち合わせ日</label>
+              <input
+                type="date"
+                value={meetingDate}
+                onChange={(e) => setMeetingDate(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
+              />
+              <p className="mt-1 text-[11px] text-slate-500">「次回まで」を実際の日付に換算します</p>
+            </div>
+            <div>
+              <label className="mb-2 block text-[13px] font-bold text-slate-700">
+                この案件の固有名詞（伏せる対象）
+              </label>
+              <input
+                value={names}
+                onChange={(e) => setNames(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
+                placeholder="田中, 株式会社◯◯"
+              />
+            </div>
+          </div>
 
           <label className="mt-5 mb-2 block text-[13px] font-bold text-slate-700">
             打ち合わせの記録
@@ -225,11 +248,19 @@ export default function Home() {
                   <p className="mt-1 text-[13px] text-slate-300">認識のズレ</p>
                 </div>
               </div>
-              <p className="mt-4 border-t border-white/15 pt-3 text-[13px] text-slate-300">
-                原価 {formatCost(totalCost)}　/　個人情報 {res.privacy.maskedCount}件を伏せて送信
-                {res.privacy.verified ? '（漏れなし）' : '（要確認）'}　/
-                {res.calls.map((c) => c.servedModel).join(', ')}
-              </p>
+              {demoMode && (
+                <p className="mt-4 border-t border-white/15 pt-3 text-[13px] text-slate-300">
+                  原価 {formatCost(totalCost)}　/　個人情報 {res.privacy.maskedCount}件を伏せて送信
+                  {res.privacy.verified ? '（漏れなし）' : '（要確認）'}　/
+                  {res.calls.map((c) => c.servedModel).join(', ')}
+                </p>
+              )}
+              <button
+                onClick={() => setDemoMode((v) => !v)}
+                className="mt-3 text-[11px] text-slate-400 underline"
+              >
+                {demoMode ? '技術情報を隠す（実際の利用画面）' : '技術情報を表示（原価・モデル）'}
+              </button>
             </section>
 
             {res.summary && <p className="mt-6 text-[15px] leading-[1.9] text-slate-700">{res.summary}</p>}
@@ -257,7 +288,13 @@ export default function Home() {
                                 要見積
                               </span>
                             )}
-                            <span className="text-[12px] opacity-60">担当: {it.owner}</span>
+                            <span className="text-[12px] opacity-60">次に動く: {it.owner}</span>
+                            {(it.due_text || it.due_date) && (
+                              <span className="rounded-full border border-current/30 px-2.5 py-0.5 text-[11px] font-bold">
+                                期限 {it.due_date || it.due_text}
+                                {it.due_date && it.due_text ? `（${it.due_text}）` : ''}
+                              </span>
+                            )}
                           </div>
                           <p className="mt-2 text-[14px] leading-[1.9]">{it.detail}</p>
                           <p className="mt-2 text-[14px] leading-[1.9] opacity-85">
@@ -324,14 +361,30 @@ export default function Home() {
                     {DOC_TABS.find((t) => t.key === tab)?.hint}
                   </p>
 
-                  {tab === 'worker' && docs.workerTranslated && (
+                  <div className="mt-3 flex flex-wrap gap-2">
                     <button
-                      onClick={() => setShowTranslated((v) => !v)}
-                      className="mt-3 min-h-[40px] rounded-lg border border-slate-300 px-4 text-[13px] font-bold"
+                      onClick={async () => {
+                        const text =
+                          tab === 'worker' && showTranslated && docs.workerTranslated
+                            ? docs.workerTranslated
+                            : docs[tab];
+                        await navigator.clipboard.writeText(text);
+                        setCopied(tab);
+                        setTimeout(() => setCopied(null), 1800);
+                      }}
+                      className="min-h-[40px] rounded-lg bg-slate-100 px-4 text-[13px] font-bold text-slate-700"
                     >
-                      {showTranslated ? '日本語に戻す' : `${docs.lang}で表示`}
+                      {copied === tab ? 'コピーしました' : '本文をコピー'}
                     </button>
-                  )}
+                    {tab === 'worker' && docs.workerTranslated && (
+                      <button
+                        onClick={() => setShowTranslated((v) => !v)}
+                        className="min-h-[40px] rounded-lg border border-slate-300 px-4 text-[13px] font-bold"
+                      >
+                        {showTranslated ? '日本語に戻す' : `${docs.lang}で表示`}
+                      </button>
+                    )}
+                  </div>
 
                   {/* 施主に見せる書類なので、A4の紙に近い見え方にする */}
                   <pre className="mt-3 max-h-[30rem] overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-5 text-[14px] leading-[1.95] shadow-inner">
