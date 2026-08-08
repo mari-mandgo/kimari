@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { findByShareToken } from '@/lib/store';
 import type { Item } from '@/app/api/analyze/route';
 import FeedbackForm from '@/components/FeedbackForm';
+import Logo from '@/components/Logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,6 +34,9 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
     <main className="min-h-screen bg-[#FAF9F7] text-slate-900">
       <div className="mx-auto w-full max-w-[600px] px-5 py-10">
         <header className="mb-9">
+          <div className="mb-6">
+            <Logo size="sm" />
+          </div>
           <p className="text-[12px] font-bold tracking-widest text-slate-400">打ち合わせの記録</p>
           <h1 className="mt-2 text-[26px] font-bold leading-snug">{project.name}</h1>
           <p className="mt-2 text-[14px] text-slate-500">

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ProjectSummary } from '@/lib/store';
 import type { PublicUser } from '@/lib/roles';
+import Logo from '@/components/Logo';
 
 export default function ProjectList({ me }: { me: PublicUser }) {
   const router = useRouter();
@@ -76,8 +77,10 @@ export default function ProjectList({ me }: { me: PublicUser }) {
       <div className="mx-auto w-full max-w-[560px] px-5 py-8">
         <header className="mb-7 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-[32px] font-bold tracking-tight">KIMARI</h1>
-            <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
+            <h1>
+              <Logo size="lg" />
+            </h1>
+            <p className="mt-2 text-[15px] leading-relaxed text-slate-600">
               打ち合わせの記録から、
               <strong className="text-slate-900">追加見積が必要な変更</strong>と
               <strong className="text-slate-900">期限</strong>を見つけます。

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ROLES } from '@/lib/roles';
+import Logo from '@/components/Logo';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,8 +50,10 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
       <div className="mx-auto w-full max-w-[420px] px-5 py-12">
-        <h1 className="text-[32px] font-bold tracking-tight">KIMARI</h1>
-        <p className="mt-1.5 text-[14px] text-slate-600">
+        <h1>
+          <Logo size="lg" />
+        </h1>
+        <p className="mt-2 text-[14px] text-slate-600">
           打ち合わせの記録から、追加見積が必要な変更と期限を見つけます。
         </p>
 
