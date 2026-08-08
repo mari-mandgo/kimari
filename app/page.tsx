@@ -1,69 +1,173 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import type { AnalyzeResponse, Item } from './api/analyze/route';
+
+const CATEGORY = {
+  cost_impact: { label: '金額に影響する変更', hint: '追加見積の対象', color: 'bg-rose-50 border-rose-200 text-rose-900' },
+  decision_no_cost: { label: '決定（金額の変更なし）', hint: '', color: 'bg-emerald-50 border-emerald-200 text-emerald-900' },
+  pending: { label: '保留', hint: '判断待ち', color: 'bg-amber-50 border-amber-200 text-amber-900' },
+  risk: { label: '認識のズレの可能性', hint: '要確認', color: 'bg-slate-900 border-slate-900 text-white' },
+} as const;
+
+const ORDER: Item['category'][] = ['cost_impact', 'risk', 'decision_no_cost', 'pending'];
 
 export default function Home() {
+  const [transcript, setTranscript] = useState('');
+  const [names, setNames] = useState('田中');
+  const [loading, setLoading] = useState(false);
+  const [res, setRes] = useState<AnalyzeResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showSent, setShowSent] = useState(false);
+
+  async function run() {
+    setLoading(true);
+    setError(null);
+    setRes(null);
+    try {
+      const r = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transcript,
+          names: names.split(/[,、\s]+/).filter(Boolean),
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? '失敗しました');
+      setRes(j);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const grouped = (c: Item['category']) => res?.items.filter((i) => i.category === c) ?? [];
+  const totalTokens = res?.calls.reduce((a, b) => a + b.totalTokens, 0) ?? 0;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <div className="mx-auto max-w-5xl px-5 py-10">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">KIMARI</h1>
+          <p className="mt-2 text-slate-600">
+            打ち合わせの記録から、<strong>追加見積が必要な変更</strong>を見つけます。議事録は作りません。
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        </header>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <label className="block text-sm font-bold mb-2">案件に登録された固有名詞（マスク対象）</label>
+          <input
+            value={names}
+            onChange={(e) => setNames(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            placeholder="田中, 株式会社◯◯"
+          />
+
+          <label className="block text-sm font-bold mt-5 mb-2">打ち合わせの記録</label>
+          <textarea
+            value={transcript}
+            onChange={(e) => setTranscript(e.target.value)}
+            rows={12}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-[13px] leading-relaxed"
+            placeholder="文字起こしを貼り付けてください"
+          />
+
+          <button
+            onClick={run}
+            disabled={loading || !transcript.trim()}
+            className="mt-4 rounded-xl bg-slate-900 px-6 py-3 font-bold text-white disabled:opacity-40"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            {loading ? '解析中…' : '仕分ける'}
+          </button>
+        </section>
+
+        {error && (
+          <p className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">{error}</p>
+        )}
+
+        {res && (
+          <>
+            <section className="mt-8 grid gap-3 sm:grid-cols-3">
+              <Stat label="ルーターが選んだモデル" value={res.calls.map((c) => c.servedModel).join(', ')} />
+              <Stat label="消費トークン" value={totalTokens.toLocaleString()} />
+              <Stat
+                label="伏せた個人情報"
+                value={`${res.privacy.maskedCount} 件${res.privacy.verified ? '（漏れなし）' : '（要確認）'}`}
+              />
+            </section>
+
+            <p className="mt-6 text-slate-700">{res.summary}</p>
+
+            <section className="mt-6 space-y-6">
+              {ORDER.map((c) => {
+                const list = grouped(c);
+                if (!list.length) return null;
+                const meta = CATEGORY[c];
+                return (
+                  <div key={c}>
+                    <h2 className="mb-3 font-bold">
+                      {meta.label}
+                      <span className="ml-2 text-sm font-normal text-slate-500">
+                        {list.length}件{meta.hint && ` ・ ${meta.hint}`}
+                      </span>
+                    </h2>
+                    <div className="space-y-3">
+                      {list.map((it, i) => (
+                        <div key={i} className={`rounded-xl border p-4 ${meta.color}`}>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-bold">{it.title}</h3>
+                            {it.needs_estimate && (
+                              <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                                要見積
+                              </span>
+                            )}
+                            <span className="text-[11px] opacity-70">担当: {it.owner}</span>
+                          </div>
+                          <p className="mt-2 text-sm leading-relaxed">{it.detail}</p>
+                          <p className="mt-2 text-sm leading-relaxed opacity-90">
+                            <span className="font-bold">理由：</span>
+                            {it.reason}
+                          </p>
+                          {it.quote && (
+                            <p className="mt-2 border-l-2 border-current/30 pl-3 text-[13px] opacity-70">
+                              「{it.quote}」
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </section>
+
+            <section className="mt-8">
+              <button
+                onClick={() => setShowSent((v) => !v)}
+                className="text-sm font-bold text-slate-600 underline"
+              >
+                {showSent ? '閉じる' : 'ルーターへ実際に送った本文を見る（個人情報のマスク確認）'}
+              </button>
+              {showSent && (
+                <pre className="mt-3 max-h-96 overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-[12px] leading-relaxed whitespace-pre-wrap">
+                  {res.sentToRouter}
+                </pre>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <p className="text-[11px] font-bold text-slate-500">{label}</p>
+      <p className="mt-1 font-mono text-sm">{value}</p>
     </div>
   );
 }
