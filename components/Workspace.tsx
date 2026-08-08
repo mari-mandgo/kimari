@@ -8,6 +8,7 @@ import { formatCost } from '@/lib/pricing';
 import type { Project } from '@/lib/store';
 import Link from 'next/link';
 import ProjectSettings from '@/components/ProjectSettings';
+import type { PublicUser } from '@/lib/roles';
 
 const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
 
@@ -48,7 +49,7 @@ const ORDER: Item['category'][] = ['cost_impact', 'risk', 'decision_no_cost', 'p
 
 const STEPS = ['個人情報を伏せています', 'ルーターがモデルを選んでいます', '会話を仕分けています'];
 
-export default function Workspace({ project }: { project: Project }) {
+export default function Workspace({ project, me }: { project: Project; me: PublicUser }) {
   const [transcript, setTranscript] = useState('');
   const [names, setNames] = useState(project.names.join(', '));
   const [loading, setLoading] = useState(false);
@@ -187,10 +188,29 @@ export default function Workspace({ project }: { project: Project }) {
             ← 現場の一覧
           </Link>
           <h1 className="mt-2 text-[28px] font-bold tracking-tight">{project.name}</h1>
-          <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
-            打ち合わせの記録から、<strong className="text-slate-900">追加見積が必要な変更</strong>
-            と<strong className="text-slate-900">期限</strong>を見つけます。
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-slate-500">
+            <span>
+              {me.name}（{me.role}）
+            </span>
+            {project.inviteCode && (
+              <span className="flex items-center gap-1.5">
+                招待コード
+                <code className="rounded-md bg-slate-200 px-2 py-0.5 font-mono text-[13px] font-bold text-slate-800">
+                  {project.inviteCode}
+                </code>
+                <button
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(project.inviteCode as string);
+                    setCopied('invite');
+                    setTimeout(() => setCopied(null), 1800);
+                  }}
+                  className="underline"
+                >
+                  {copied === 'invite' ? 'コピーしました' : 'コピー'}
+                </button>
+              </span>
+            )}
+          </div>
         </header>
 
         <ProjectSettings project={project} />

@@ -81,6 +81,12 @@ export type Project = {
    * 内容が積み上がっていく。
    */
   shareToken: string;
+  /** 職人などを現場へ招くためのコード */
+  inviteCode?: string;
+  /** 現場を作った人 */
+  ownerId?: string;
+  /** この現場に参加しているユーザー（施主は含まない） */
+  memberUserIds?: string[];
   meetings: Meeting[];
   createdAt: string;
   updatedAt: string;
@@ -107,7 +113,8 @@ export function newId(prefix = ''): string {
   return prefix ? `${prefix}-${s}` : s;
 }
 
-export function listProjects(): ProjectSummary[] {
+/** userId を渡すと、その人が参加している現場だけを返す */
+export function listProjects(userId?: string): ProjectSummary[] {
   ensureDir();
   const files = fs.readdirSync(DIR).filter((f) => f.endsWith('.json'));
   const list = files
@@ -119,8 +126,21 @@ export function listProjects(): ProjectSummary[] {
       }
     })
     .filter((p): p is Project => p !== null)
+    .filter((p) => !userId || (p.memberUserIds ?? []).includes(userId) || p.ownerId === userId)
     .map(summarize);
   return list.sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+/** その人がこの現場を見てよいか */
+export function canAccess(p: Project, userId: string): boolean {
+  return p.ownerId === userId || (p.memberUserIds ?? []).includes(userId);
+}
+
+export function joinProject(p: Project, userId: string): Project {
+  const ids = new Set(p.memberUserIds ?? []);
+  ids.add(userId);
+  p.memberUserIds = [...ids];
+  return saveProject(p);
 }
 
 function summarize(p: Project): ProjectSummary {
@@ -164,8 +184,38 @@ function migrate(p: Project): Project {
     p.property = { address: '', area: '', structure: '', age: '', completionDate: '' };
     changed = true;
   }
+  if (!p.inviteCode) {
+    p.inviteCode = makeInviteCode();
+    changed = true;
+  }
+  if (!p.memberUserIds) {
+    p.memberUserIds = p.ownerId ? [p.ownerId] : [];
+    changed = true;
+  }
   if (changed) saveProject(p);
   return p;
+}
+
+/** 口頭でも伝えられるよう、紛らわしい文字を除いた6桁にする */
+export function makeInviteCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+export function findByInviteCode(code: string): Project | null {
+  ensureDir();
+  const target = code.trim().toUpperCase();
+  for (const f of fs.readdirSync(DIR).filter((x) => x.endsWith('.json'))) {
+    try {
+      const p = JSON.parse(fs.readFileSync(path.join(DIR, f), 'utf8')) as Project;
+      if (p.inviteCode === target) return migrate(p);
+    } catch {
+      // 壊れたファイルは飛ばす
+    }
+  }
+  return null;
 }
 
 export function getProject(id: string): Project | null {
@@ -186,12 +236,15 @@ export function saveProject(p: Project): Project {
   return next;
 }
 
-export function createProject(name: string, names: string[] = []): Project {
+export function createProject(name: string, names: string[] = [], ownerId?: string): Project {
   const now = new Date().toISOString();
   const p: Project = {
     id: newId('p'),
     name: name.trim() || '名称未設定の現場',
     names,
+    inviteCode: makeInviteCode(),
+    ownerId,
+    memberUserIds: ownerId ? [ownerId] : [],
     property: { address: '', area: '', structure: '', age: '', completionDate: '' },
     members: [],
     stages: DEFAULT_STAGES.map((s) => ({ ...s })),
