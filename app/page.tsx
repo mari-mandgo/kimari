@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AnalyzeResponse, Item } from './api/analyze/route';
 import type { DocumentsResponse } from './api/documents/route';
 import { SAMPLE_TRANSCRIPT, SAMPLE_NAMES } from '@/lib/sample';
@@ -9,24 +9,47 @@ import { formatCost, USD_JPY } from '@/lib/pricing';
 const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
 
 const DOC_TABS = [
-  { key: 'owner', label: '施主へ', hint: '確認書。金額は書かない' },
-  { key: 'worker', label: '職人へ', hint: '作業指示。個人情報と金額は載せない' },
-  { key: 'internal', label: '社内保存', hint: '根拠と経緯を残す' },
+  { key: 'owner', label: '施主へ', hint: '確認書。金額は書きません' },
+  { key: 'worker', label: '職人へ', hint: '作業指示。個人情報と金額は載せません' },
+  { key: 'internal', label: '社内保存', hint: '根拠と経緯を残します' },
 ] as const;
 
 const CATEGORY = {
-  cost_impact: { label: '金額に影響する変更', hint: '追加見積の対象', color: 'bg-rose-50 border-rose-200 text-rose-900' },
-  decision_no_cost: { label: '決定（金額の変更なし）', hint: '', color: 'bg-emerald-50 border-emerald-200 text-emerald-900' },
-  pending: { label: '保留', hint: '判断待ち', color: 'bg-amber-50 border-amber-200 text-amber-900' },
-  risk: { label: '認識のズレの可能性', hint: '要確認', color: 'bg-slate-900 border-slate-900 text-white' },
+  cost_impact: {
+    label: '追加見積が必要',
+    hint: '書面での提示が要ります',
+    card: 'bg-white border-l-[6px] border-l-rose-600 border-y border-r border-slate-200',
+    chip: 'bg-rose-600 text-white',
+  },
+  risk: {
+    label: '認識のズレ',
+    hint: '曖昧なまま流れています',
+    card: 'bg-slate-900 text-white border-l-[6px] border-l-amber-400',
+    chip: 'bg-amber-400 text-slate-900',
+  },
+  decision_no_cost: {
+    label: '決定（金額の変更なし）',
+    hint: '',
+    card: 'bg-white border-l-[6px] border-l-emerald-500 border-y border-r border-slate-200',
+    chip: 'bg-emerald-500 text-white',
+  },
+  pending: {
+    label: '保留',
+    hint: '判断待ちです',
+    card: 'bg-white border-l-[6px] border-l-amber-500 border-y border-r border-slate-200',
+    chip: 'bg-amber-500 text-white',
+  },
 } as const;
 
 const ORDER: Item['category'][] = ['cost_impact', 'risk', 'decision_no_cost', 'pending'];
 
+const STEPS = ['個人情報を伏せています', 'ルーターがモデルを選んでいます', '会話を仕分けています'];
+
 export default function Home() {
   const [transcript, setTranscript] = useState('');
-  const [names, setNames] = useState('田中');
+  const [names, setNames] = useState('');
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(0);
   const [res, setRes] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSent, setShowSent] = useState(false);
@@ -35,6 +58,39 @@ export default function Home() {
   const [tab, setTab] = useState<(typeof DOC_TABS)[number]['key']>('owner');
   const [lang, setLang] = useState('なし');
   const [showTranslated, setShowTranslated] = useState(false);
+
+  // 待ち時間に「何をしているか」を出す。無言で42秒待たせない
+  useEffect(() => {
+    if (!loading) return setStep(0);
+    const timers = [
+      setTimeout(() => setStep(1), 1500),
+      setTimeout(() => setStep(2), 5000),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [loading]);
+
+  const nameList = () => names.split(/[,、\s]+/).filter(Boolean);
+
+  async function run() {
+    setLoading(true);
+    setError(null);
+    setRes(null);
+    setDocs(null);
+    try {
+      const r = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript, names: nameList(), model: 'orcarouter/fusion-flash' }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? '失敗しました');
+      setRes(j);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function makeDocs() {
     if (!res) return;
@@ -47,7 +103,7 @@ export default function Home() {
         body: JSON.stringify({
           items: res.items,
           summary: res.summary,
-          names: names.split(/[,、\s]+/).filter(Boolean),
+          names: nameList(),
           lang: lang === 'なし' ? null : lang,
         }),
       });
@@ -62,72 +118,56 @@ export default function Home() {
     }
   }
 
-  async function run() {
-    setLoading(true);
-    setError(null);
-    setRes(null);
-    setDocs(null);
-    try {
-      const r = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          transcript,
-          names: names.split(/[,、\s]+/).filter(Boolean),
-        }),
-      });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error ?? '失敗しました');
-      setRes(j);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
   const grouped = (c: Item['category']) => res?.items.filter((i) => i.category === c) ?? [];
-  const totalTokens = res?.calls.reduce((a, b) => a + b.totalTokens, 0) ?? 0;
   const allCalls = [...(res?.calls ?? []), ...(docs?.calls ?? [])];
   const totalCost = allCalls.length
     ? allCalls.reduce((acc, c) => acc + (c.costUsd ?? c.estCostUsd ?? 0), 0)
     : null;
 
+  const costCount = grouped('cost_impact').length;
+  const riskCount = grouped('risk').length;
+
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto max-w-5xl px-5 py-10">
-        <header className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">KIMARI</h1>
-          <p className="mt-2 text-slate-600">
-            打ち合わせの記録から、<strong>追加見積が必要な変更</strong>を見つけます。議事録は作りません。
+    <main className="min-h-screen bg-slate-100 text-slate-900">
+      {/* 縦持ちのiPadを基準にした横幅。横向きでも中央に収まる */}
+      <div className="mx-auto w-full max-w-[820px] px-5 py-8 sm:py-10">
+        <header className="mb-7">
+          <h1 className="text-[32px] font-bold tracking-tight">KIMARI</h1>
+          <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
+            打ち合わせの記録から、<strong className="text-slate-900">追加見積が必要な変更</strong>
+            を見つけます。議事録は作りません。
           </p>
         </header>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <label className="block text-sm font-bold mb-2">案件に登録された固有名詞（マスク対象）</label>
+          <label className="mb-2 block text-[13px] font-bold text-slate-700">
+            この案件の固有名詞（伏せる対象）
+          </label>
           <input
             value={names}
             onChange={(e) => setNames(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
             placeholder="田中, 株式会社◯◯"
           />
 
-          <label className="block text-sm font-bold mt-5 mb-2">打ち合わせの記録</label>
+          <label className="mt-5 mb-2 block text-[13px] font-bold text-slate-700">
+            打ち合わせの記録
+          </label>
           <textarea
             value={transcript}
             onChange={(e) => setTranscript(e.target.value)}
-            rows={12}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-[13px] leading-relaxed"
+            rows={10}
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[14px] leading-[1.9]"
             placeholder="文字起こしを貼り付けてください"
           />
 
-          <div className="mt-4 flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap gap-3">
             <button
               onClick={run}
               disabled={loading || !transcript.trim()}
-              className="rounded-xl bg-slate-900 px-6 py-3 font-bold text-white disabled:opacity-40"
+              className="min-h-[52px] flex-1 rounded-xl bg-slate-900 px-6 text-[16px] font-bold text-white disabled:opacity-40"
             >
-              {loading ? '解析中…' : '仕分ける'}
+              {loading ? '仕分けています…' : '仕分ける'}
             </button>
             <button
               onClick={() => {
@@ -135,67 +175,101 @@ export default function Home() {
                 setNames(SAMPLE_NAMES);
               }}
               disabled={loading}
-              className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-700 disabled:opacity-40"
+              className="min-h-[52px] rounded-xl border border-slate-300 bg-white px-5 text-[14px] font-bold text-slate-700 disabled:opacity-40"
             >
-              サンプルを読み込む
+              サンプル
             </button>
           </div>
+
+          {loading && (
+            <ol className="mt-5 space-y-2">
+              {STEPS.map((s, i) => (
+                <li
+                  key={s}
+                  className={`flex items-center gap-2.5 text-[14px] ${
+                    i <= step ? 'text-slate-900' : 'text-slate-400'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-2 w-2 shrink-0 rounded-full ${
+                      i < step ? 'bg-emerald-500' : i === step ? 'animate-pulse bg-slate-900' : 'bg-slate-300'
+                    }`}
+                  />
+                  {s}
+                </li>
+              ))}
+            </ol>
+          )}
         </section>
 
         {error && (
-          <p className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900">{error}</p>
+          <p className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-[14px] text-rose-900">
+            {error}
+          </p>
         )}
 
         {res && (
           <>
-            <section className="mt-8 grid gap-3 sm:grid-cols-4">
-              <Stat label="ルーターが選んだモデル" value={res.calls.map((c) => c.servedModel).join(', ')} />
-              <Stat label="消費トークン" value={totalTokens.toLocaleString()} />
-              <Stat label="この1件の原価" value={formatCost(totalCost)} note={`概算・$1=${USD_JPY}円`} />
-              <Stat
-                label="伏せた個人情報"
-                value={`${res.privacy.maskedCount} 件${res.privacy.verified ? '（漏れなし）' : '（要確認）'}`}
-              />
+            {/* 開いた瞬間に伝わる一行 */}
+            <section className="mt-8 rounded-2xl bg-slate-900 p-6 text-white">
+              <p className="text-[13px] font-bold text-slate-300">この打ち合わせで見つかったもの</p>
+              <div className="mt-3 flex flex-wrap items-end gap-x-8 gap-y-3">
+                <div>
+                  <span className="text-[52px] font-bold leading-none text-rose-400">{costCount}</span>
+                  <span className="ml-2 text-[16px] font-bold">件</span>
+                  <p className="mt-1 text-[13px] text-slate-300">追加見積が必要</p>
+                </div>
+                <div>
+                  <span className="text-[32px] font-bold leading-none text-amber-300">{riskCount}</span>
+                  <span className="ml-2 text-[14px] font-bold">件</span>
+                  <p className="mt-1 text-[13px] text-slate-300">認識のズレ</p>
+                </div>
+              </div>
+              <p className="mt-4 border-t border-white/15 pt-3 text-[13px] text-slate-300">
+                原価 {formatCost(totalCost)}　/　個人情報 {res.privacy.maskedCount}件を伏せて送信
+                {res.privacy.verified ? '（漏れなし）' : '（要確認）'}　/
+                {res.calls.map((c) => c.servedModel).join(', ')}
+              </p>
             </section>
 
-            <p className="mt-6 text-slate-700">{res.summary}</p>
+            {res.summary && <p className="mt-6 text-[15px] leading-[1.9] text-slate-700">{res.summary}</p>}
 
-            <section className="mt-6 space-y-6">
+            <section className="mt-6 space-y-7">
               {ORDER.map((c) => {
                 const list = grouped(c);
                 if (!list.length) return null;
                 const meta = CATEGORY[c];
                 return (
                   <div key={c}>
-                    <h2 className="mb-3 font-bold">
-                      {meta.label}
-                      <span className="ml-2 text-sm font-normal text-slate-500">
+                    <h2 className="mb-3 flex flex-wrap items-baseline gap-2">
+                      <span className="text-[17px] font-bold">{meta.label}</span>
+                      <span className="text-[13px] text-slate-500">
                         {list.length}件{meta.hint && ` ・ ${meta.hint}`}
                       </span>
                     </h2>
                     <div className="space-y-3">
                       {list.map((it, i) => (
-                        <div key={i} className={`rounded-xl border p-4 ${meta.color}`}>
+                        <article key={i} className={`rounded-xl p-4 sm:p-5 ${meta.card}`}>
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="font-bold">{it.title}</h3>
+                            <h3 className="text-[16px] font-bold">{it.title}</h3>
                             {it.needs_estimate && (
-                              <span className="rounded-full bg-rose-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                              <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${meta.chip}`}>
                                 要見積
                               </span>
                             )}
-                            <span className="text-[11px] opacity-70">担当: {it.owner}</span>
+                            <span className="text-[12px] opacity-60">担当: {it.owner}</span>
                           </div>
-                          <p className="mt-2 text-sm leading-relaxed">{it.detail}</p>
-                          <p className="mt-2 text-sm leading-relaxed opacity-90">
+                          <p className="mt-2 text-[14px] leading-[1.9]">{it.detail}</p>
+                          <p className="mt-2 text-[14px] leading-[1.9] opacity-85">
                             <span className="font-bold">理由：</span>
                             {it.reason}
                           </p>
                           {it.quote && (
-                            <p className="mt-2 border-l-2 border-current/30 pl-3 text-[13px] opacity-70">
+                            <p className="mt-3 border-l-2 border-current/25 pl-3 text-[13px] opacity-60">
                               「{it.quote}」
                             </p>
                           )}
-                        </div>
+                        </article>
                       ))}
                     </div>
                   </div>
@@ -203,9 +277,9 @@ export default function Home() {
               })}
             </section>
 
-            <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-5">
-              <h2 className="font-bold">この内容から、宛先別に3つの文書を作ります</h2>
-              <p className="mt-1 text-sm text-slate-600">
+            <section className="mt-10 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h2 className="text-[17px] font-bold">宛先ごとに、3つの文書を作ります</h2>
+              <p className="mt-1.5 text-[14px] leading-relaxed text-slate-600">
                 同じ会話でも、施主・職人・社内で必要な情報は違います。金額と個人情報の出し分けもここで行います。
               </p>
 
@@ -213,16 +287,16 @@ export default function Home() {
                 <button
                   onClick={makeDocs}
                   disabled={docsLoading}
-                  className="rounded-xl bg-slate-900 px-6 py-3 font-bold text-white disabled:opacity-40"
+                  className="min-h-[52px] rounded-xl bg-slate-900 px-6 text-[16px] font-bold text-white disabled:opacity-40"
                 >
-                  {docsLoading ? '作成中…' : '3つの文書を作る'}
+                  {docsLoading ? '作成しています…' : '3つの文書を作る'}
                 </button>
-                <label className="text-sm text-slate-600">
+                <label className="text-[14px] text-slate-600">
                   職人向けの翻訳
                   <select
                     value={lang}
                     onChange={(e) => setLang(e.target.value)}
-                    className="ml-2 rounded-lg border border-slate-300 px-2 py-1.5 text-sm"
+                    className="ml-2 min-h-[44px] rounded-xl border border-slate-300 px-3 text-[14px]"
                   >
                     {LANGS.map((l) => (
                       <option key={l}>{l}</option>
@@ -238,7 +312,7 @@ export default function Home() {
                       <button
                         key={t.key}
                         onClick={() => setTab(t.key)}
-                        className={`rounded-lg px-4 py-2 text-sm font-bold ${
+                        className={`min-h-[44px] rounded-xl px-5 text-[14px] font-bold ${
                           tab === t.key ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
                         }`}
                       >
@@ -246,20 +320,21 @@ export default function Home() {
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-2 text-[12px] text-slate-500">
                     {DOC_TABS.find((t) => t.key === tab)?.hint}
                   </p>
 
                   {tab === 'worker' && docs.workerTranslated && (
                     <button
                       onClick={() => setShowTranslated((v) => !v)}
-                      className="mt-3 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-bold"
+                      className="mt-3 min-h-[40px] rounded-lg border border-slate-300 px-4 text-[13px] font-bold"
                     >
                       {showTranslated ? '日本語に戻す' : `${docs.lang}で表示`}
                     </button>
                   )}
 
-                  <pre className="mt-3 max-h-[28rem] overflow-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-[13px] leading-relaxed whitespace-pre-wrap">
+                  {/* 施主に見せる書類なので、A4の紙に近い見え方にする */}
+                  <pre className="mt-3 max-h-[30rem] overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-5 text-[14px] leading-[1.95] shadow-inner">
                     {tab === 'worker' && showTranslated && docs.workerTranslated
                       ? docs.workerTranslated
                       : docs[tab]}
@@ -268,15 +343,15 @@ export default function Home() {
               )}
             </section>
 
-            <section className="mt-8">
+            <section className="mt-8 pb-16">
               <button
                 onClick={() => setShowSent((v) => !v)}
-                className="text-sm font-bold text-slate-600 underline"
+                className="text-[13px] font-bold text-slate-600 underline"
               >
-                {showSent ? '閉じる' : 'ルーターへ実際に送った本文を見る（個人情報のマスク確認）'}
+                {showSent ? '閉じる' : 'ルーターへ実際に送った本文を見る（個人情報の確認）'}
               </button>
               {showSent && (
-                <pre className="mt-3 max-h-96 overflow-auto rounded-xl border border-slate-200 bg-white p-4 text-[12px] leading-relaxed whitespace-pre-wrap">
+                <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-4 text-[12px] leading-relaxed">
                   {res.sentToRouter}
                 </pre>
               )}
@@ -285,15 +360,5 @@ export default function Home() {
         )}
       </div>
     </main>
-  );
-}
-
-function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-[11px] font-bold text-slate-500">{label}</p>
-      <p className="mt-1 font-mono text-sm">{value}</p>
-      {note && <p className="mt-1 text-[10px] text-slate-400">{note}</p>}
-    </div>
   );
 }
