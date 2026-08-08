@@ -10,6 +10,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { estimateCostUsd } from './pricing';
 
 const BASE_URL = process.env.ORCA_BASE_URL ?? 'https://api.orcarouter.ai/v1';
 
@@ -31,6 +32,10 @@ export type CallMeta = {
   totalTokens: number;
   /** レスポンスに費用が含まれていれば拾う（含まれない場合は null） */
   costUsd: number | null;
+  /** 単価表からの概算。costUsd が無いときの表示に使う */
+  estCostUsd: number | null;
+  /** 概算が単価表の完全一致か（false は同系列モデルからの近似） */
+  costExact: boolean;
   ms: number;
 };
 
@@ -83,14 +88,21 @@ export async function chat({
   const payload = await res.json();
   const usage = payload.usage ?? {};
 
+  const servedModel = payload.model ?? 'unknown';
+  const promptTokens = usage.prompt_tokens ?? 0;
+  const completionTokens = usage.completion_tokens ?? 0;
+  const est = estimateCostUsd(servedModel, promptTokens, completionTokens);
+
   const meta: CallMeta = {
     task,
     requestedModel: model,
-    servedModel: payload.model ?? 'unknown',
-    promptTokens: usage.prompt_tokens ?? 0,
-    completionTokens: usage.completion_tokens ?? 0,
+    servedModel,
+    promptTokens,
+    completionTokens,
     totalTokens: usage.total_tokens ?? 0,
     costUsd: pickCost(payload, usage),
+    estCostUsd: est.usd,
+    costExact: est.exact,
     ms,
   };
 

@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import type { AnalyzeResponse, Item } from './api/analyze/route';
+import { SAMPLE_TRANSCRIPT, SAMPLE_NAMES } from '@/lib/sample';
+import { formatCost, USD_JPY } from '@/lib/pricing';
 
 const CATEGORY = {
   cost_impact: { label: '金額に影響する変更', hint: '追加見積の対象', color: 'bg-rose-50 border-rose-200 text-rose-900' },
@@ -45,6 +47,12 @@ export default function Home() {
 
   const grouped = (c: Item['category']) => res?.items.filter((i) => i.category === c) ?? [];
   const totalTokens = res?.calls.reduce((a, b) => a + b.totalTokens, 0) ?? 0;
+  const totalCost =
+    res?.calls.reduce<number | null>((acc, c) => {
+      const v = c.costUsd ?? c.estCostUsd;
+      if (v === null || acc === null) return acc === null ? null : acc;
+      return acc + v;
+    }, 0) ?? null;
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
@@ -74,13 +82,25 @@ export default function Home() {
             placeholder="文字起こしを貼り付けてください"
           />
 
-          <button
-            onClick={run}
-            disabled={loading || !transcript.trim()}
-            className="mt-4 rounded-xl bg-slate-900 px-6 py-3 font-bold text-white disabled:opacity-40"
-          >
-            {loading ? '解析中…' : '仕分ける'}
-          </button>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              onClick={run}
+              disabled={loading || !transcript.trim()}
+              className="rounded-xl bg-slate-900 px-6 py-3 font-bold text-white disabled:opacity-40"
+            >
+              {loading ? '解析中…' : '仕分ける'}
+            </button>
+            <button
+              onClick={() => {
+                setTranscript(SAMPLE_TRANSCRIPT);
+                setNames(SAMPLE_NAMES);
+              }}
+              disabled={loading}
+              className="rounded-xl border border-slate-300 px-5 py-3 text-sm font-bold text-slate-700 disabled:opacity-40"
+            >
+              サンプルを読み込む
+            </button>
+          </div>
         </section>
 
         {error && (
@@ -89,9 +109,10 @@ export default function Home() {
 
         {res && (
           <>
-            <section className="mt-8 grid gap-3 sm:grid-cols-3">
+            <section className="mt-8 grid gap-3 sm:grid-cols-4">
               <Stat label="ルーターが選んだモデル" value={res.calls.map((c) => c.servedModel).join(', ')} />
               <Stat label="消費トークン" value={totalTokens.toLocaleString()} />
+              <Stat label="この1件の原価" value={formatCost(totalCost)} note={`概算・$1=${USD_JPY}円`} />
               <Stat
                 label="伏せた個人情報"
                 value={`${res.privacy.maskedCount} 件${res.privacy.verified ? '（漏れなし）' : '（要確認）'}`}
@@ -163,11 +184,12 @@ export default function Home() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, note }: { label: string; value: string; note?: string }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4">
       <p className="text-[11px] font-bold text-slate-500">{label}</p>
       <p className="mt-1 font-mono text-sm">{value}</p>
+      {note && <p className="mt-1 text-[10px] text-slate-400">{note}</p>}
     </div>
   );
 }
