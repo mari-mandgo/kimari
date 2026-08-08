@@ -7,6 +7,7 @@ import { SAMPLE_TRANSCRIPT, SAMPLE_NAMES } from '@/lib/sample';
 import { formatCost } from '@/lib/pricing';
 import type { Project } from '@/lib/store';
 import Link from 'next/link';
+import ProjectSettings from '@/components/ProjectSettings';
 
 const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
 
@@ -191,6 +192,8 @@ export default function Workspace({ project }: { project: Project }) {
             と<strong className="text-slate-900">期限</strong>を見つけます。
           </p>
         </header>
+
+        <ProjectSettings project={project} />
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="grid gap-4 sm:grid-cols-[180px_1fr]">

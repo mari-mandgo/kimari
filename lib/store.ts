@@ -30,10 +30,48 @@ export type Meeting = {
   createdAt: string;
 };
 
+/** 物件の基本情報。施主と共有するページに出す */
+export type PropertyInfo = {
+  address: string;
+  /** 専有面積など。単位ごと文字列で持つ（㎡と坪が混ざるため） */
+  area: string;
+  structure: string;
+  /** 築年数。「25年」のように単位ごと */
+  age: string;
+  /** 竣工予定日 */
+  completionDate: string;
+};
+
+export type Member = {
+  name: string;
+  /** 施主 / 設計担当 / コーディネーター / 施工管理 など */
+  role: string;
+};
+
+/** 工程の段階。今どこにいるかを施主に見せるためのもの */
+export type Stage = {
+  label: string;
+  /** 実施日または予定日 */
+  date: string;
+  done: boolean;
+};
+
+export const DEFAULT_STAGES: Stage[] = [
+  { label: '初回打合せ', date: '', done: false },
+  { label: 'プラン提案', date: '', done: false },
+  { label: '見積もり提示', date: '', done: false },
+  { label: '工事開始', date: '', done: false },
+  { label: '竣工', date: '', done: false },
+];
+
 export type Project = {
   id: string;
   /** 現場名。「田中様邸リノベーション」など */
   name: string;
+  /** 施主と共有する物件情報。すべて手入力 */
+  property?: PropertyInfo;
+  members?: Member[];
+  stages?: Stage[];
   /** マスク対象の固有名詞 */
   names: string[];
   /**
@@ -107,12 +145,26 @@ function summarize(p: Project): ProjectSummary {
   };
 }
 
-/** 古いデータには現場トークンが無いので、読み込み時に補う */
+/** 古いデータに無い項目を、読み込み時に補う */
 function migrate(p: Project): Project {
+  let changed = false;
   if (!p.shareToken) {
     p.shareToken = newId('s');
-    saveProject(p);
+    changed = true;
   }
+  if (!p.stages) {
+    p.stages = DEFAULT_STAGES.map((s) => ({ ...s }));
+    changed = true;
+  }
+  if (!p.members) {
+    p.members = [];
+    changed = true;
+  }
+  if (!p.property) {
+    p.property = { address: '', area: '', structure: '', age: '', completionDate: '' };
+    changed = true;
+  }
+  if (changed) saveProject(p);
   return p;
 }
 
@@ -140,6 +192,9 @@ export function createProject(name: string, names: string[] = []): Project {
     id: newId('p'),
     name: name.trim() || '名称未設定の現場',
     names,
+    property: { address: '', area: '', structure: '', age: '', completionDate: '' },
+    members: [],
+    stages: DEFAULT_STAGES.map((s) => ({ ...s })),
     shareToken: newId('s'),
     meetings: [],
     createdAt: now,

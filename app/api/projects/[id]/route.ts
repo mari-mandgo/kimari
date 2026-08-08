@@ -22,6 +22,11 @@ export async function PATCH(req: Request, { params }: Ctx) {
 
   if (typeof body.name === 'string') project.name = body.name;
   if (Array.isArray(body.names)) project.names = body.names;
+  if (body.property && typeof body.property === 'object') {
+    project.property = { ...project.property, ...body.property };
+  }
+  if (Array.isArray(body.members)) project.members = body.members;
+  if (Array.isArray(body.stages)) project.stages = body.stages;
 
   if (body.meeting) {
     const incoming = body.meeting as Partial<Meeting>;
