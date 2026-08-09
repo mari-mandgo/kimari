@@ -45,3 +45,7 @@ next-env.d.ts
 
 # 案件データ（実際の個人情報が入るため）
 /data/
+
+# ローカルの文字起こし用（Python）
+/.venv/
+/models/
