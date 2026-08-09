@@ -222,6 +222,43 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
           </div>
         </header>
 
+        {/* 施主へ渡すURL。常に見える場所に置く */}
+        {shareToken && (
+          <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-[15px] font-bold">施主に送るページ</h2>
+                <p className="mt-0.5 truncate font-mono text-[12px] text-slate-500">
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/s/{shareToken}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(`${window.location.origin}/s/${shareToken}`);
+                    setCopied('share-top');
+                    setTimeout(() => setCopied(null), 1800);
+                  }}
+                  className="min-h-[44px] rounded-xl bg-slate-900 px-5 text-[14px] font-bold text-white"
+                >
+                  {copied === 'share-top' ? 'コピーしました' : 'URLをコピー'}
+                </button>
+                <a
+                  href={`/s/${shareToken}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex min-h-[44px] items-center rounded-xl border border-slate-300 px-4 text-[14px] font-bold text-slate-700 hover:border-slate-500"
+                >
+                  開く
+                </a>
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] text-slate-400">
+              打ち合わせを記録するたびに、このページへ自動で積み上がります。送り直しは不要です。
+            </p>
+          </section>
+        )}
+
         <FeedbackInbox project={project} />
 
         <ProjectSettings project={project} />

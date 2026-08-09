@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f1f5f9;
+  --foreground: #0f172a;
 }
 
 @theme inline {
@@ -12,15 +12,31 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), "Hiragino Kaku Gothic ProN", "Yu Gothic UI", sans-serif;
+}
+
+/*
+ * Tailwind v4 からボタンの既定カーソルが default（矢印）になったため、
+ * 押せるものには指カーソルを明示する。
+ */
+button:not(:disabled),
+[role="button"]:not(:disabled),
+select,
+label:has(> input[type="file"]),
+summary {
+  cursor: pointer;
+}
+
+/* 押せるものは、触れたら僅かに反応させる（個別のhover指定が無くても） */
+button:not(:disabled) {
+  transition: opacity 0.12s ease, transform 0.06s ease;
+}
+button:not(:disabled):hover {
+  opacity: 0.86;
+}
+button:not(:disabled):active {
+  transform: scale(0.98);
 }
