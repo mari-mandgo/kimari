@@ -104,6 +104,8 @@ export type Project = {
   memberUserIds?: string[];
   /** 写真・図面・パース・見積など */
   files?: StoredFile[];
+  /** 施主ページの先頭に出す写真。未設定なら共通のヒーロー画像を使う */
+  heroFileId?: string;
   meetings: Meeting[];
   createdAt: string;
   updatedAt: string;

@@ -8,6 +8,7 @@ import Zoomable from '@/components/Zoomable';
 /** 現場の写真・図面・見積。施主の共有ページにも出る */
 export default function FileBoard({ project }: { project: Project }) {
   const [files, setFiles] = useState<StoredFile[]>(project.files ?? []);
+  const [heroId, setHeroId] = useState<string | undefined>(project.heroFileId);
   const [kind, setKind] = useState<string>(FILE_KINDS[0]);
   const [caption, setCaption] = useState('');
   const [busy, setBusy] = useState(false);
@@ -40,6 +41,17 @@ export default function FileBoard({ project }: { project: Project }) {
   async function remove(f: StoredFile) {
     setFiles((prev) => prev.filter((x) => x.stored !== f.stored));
     await fetch(`/api/projects/${project.id}/files/${f.stored}`, { method: 'DELETE' });
+  }
+
+  /** 施主ページの先頭に出す写真を選ぶ。もう一度押すと解除して共通画像に戻る */
+  async function setHero(f: StoredFile) {
+    const next = heroId === f.id ? '' : f.id;
+    setHeroId(next || undefined);
+    await fetch(`/api/projects/${project.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ heroFileId: next }),
+    });
   }
 
   return (
@@ -114,16 +126,33 @@ export default function FileBoard({ project }: { project: Project }) {
                     />
                   )}
                   <div className="p-2">
-                    <p className="text-[11px] font-bold text-slate-500">{f.kind}</p>
+                    <p className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                      {f.kind}
+                      {heroId === f.id && (
+                        <span className="rounded-full bg-slate-900 px-1.5 py-0.5 text-[9px] font-bold text-white">
+                          表紙
+                        </span>
+                      )}
+                    </p>
                     <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug">
                       {f.caption || f.original}
                     </p>
-                    <button
-                      onClick={() => remove(f)}
-                      className="mt-1 text-[11px] text-slate-400 underline"
-                    >
-                      削除
-                    </button>
+                    <div className="mt-1 flex gap-2">
+                      {f.mime !== 'application/pdf' && (
+                        <button
+                          onClick={() => setHero(f)}
+                          className="text-[11px] text-slate-500 underline"
+                        >
+                          {heroId === f.id ? '表紙を解除' : '表紙にする'}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => remove(f)}
+                        className="text-[11px] text-slate-400 underline"
+                      >
+                        削除
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

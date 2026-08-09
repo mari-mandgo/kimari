@@ -27,6 +27,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
   if (Array.isArray(body.members)) project.members = body.members;
   if (Array.isArray(body.stages)) project.stages = body.stages;
+  if (typeof body.heroFileId === 'string') project.heroFileId = body.heroFileId || undefined;
 
   // 施主からの連絡を確認済みにする
   if (body.markFeedbackRead) {

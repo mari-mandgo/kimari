@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { notFound } from 'next/navigation';
 import { findByShareToken } from '@/lib/store';
 import type { Item } from '@/app/api/analyze/route';
@@ -37,7 +39,13 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   const total = meetings.length;
   const files = project.files ?? [];
   const photos = files.filter((f) => f.mime !== 'application/pdf');
-  const hero = photos[0] ?? null;
+
+  // 表紙は明示的に選ばれた写真だけを使う。現場写真は縦横も内容もまちまちで、
+  // 自動で選ぶと表紙として成立しないため。未選択なら全現場共通の画像を出す。
+  const hero = project.heroFileId ? (photos.find((f) => f.id === project.heroFileId) ?? null) : null;
+  const defaultHero = fs.existsSync(path.join(process.cwd(), 'public', 'hero-default.jpg'))
+    ? '/hero-default.jpg'
+    : null;
 
   const stages = project.stages ?? [];
   const doneCount = stages.filter((s) => s.done).length;
@@ -54,14 +62,23 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
     <main className="min-h-screen bg-[#FAF9F7] text-slate-900">
       {/* ヒーロー */}
       <header className="relative">
-        {hero ? (
+        {hero || defaultHero ? (
           <div className="relative h-[300px] w-full overflow-hidden sm:h-[420px]">
-            <Zoomable
-              src={`/api/share/${token}/files/${hero.stored}`}
-              alt={hero.caption || '現場の写真'}
-              caption={hero.caption}
-              className="h-[300px] w-full object-cover sm:h-[420px]"
-            />
+            {hero ? (
+              <Zoomable
+                src={`/api/share/${token}/files/${hero.stored}`}
+                alt={hero.caption || '現場の写真'}
+                caption={hero.caption}
+                className="h-[300px] w-full object-cover sm:h-[420px]"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={defaultHero as string}
+                alt=""
+                className="h-full w-full object-cover"
+              />
+            )}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-black/5" />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto w-full max-w-[640px] px-5 pb-6">
               <p className="text-[11px] font-bold tracking-[0.2em] text-white/80">
