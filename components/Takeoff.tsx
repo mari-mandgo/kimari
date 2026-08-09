@@ -16,12 +16,18 @@ export default function Takeoff({
   names,
   projectId,
   canEditRules,
+  context,
+  phaseLabel,
 }: {
   item: Item;
   names: string[];
   projectId: string;
   /** ルールを直せるのは、その会社の設計・現場管理だけ */
   canEditRules: boolean;
+  /** 打ち合わせ全体の要約。工事のどの段階かを判断する材料 */
+  context?: string;
+  /** 画面で段階が指定されていれば、推測させずそれに従わせる */
+  phaseLabel?: string;
 }) {
   const [res, setRes] = useState<TakeoffResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -46,6 +52,8 @@ export default function Takeoff({
           quote: item.quote,
           names,
           projectId,
+          context,
+          phaseLabel,
         }),
       });
       const j = await r.json();
@@ -130,8 +138,22 @@ export default function Takeoff({
 
   return (
     <div className="mt-4 border-t border-slate-200 pt-4">
+      {/* 段階が分からないと、なぜこれだけしか出ないのかが伝わらない */}
+      {res.phase && (
+        <div className="mb-3 rounded-xl bg-slate-900 p-4 text-white">
+          <p className="text-[12px] text-slate-300">この打ち合わせの段階</p>
+          <p className="mt-0.5 text-[16px] font-bold">
+            {res.phase_week !== null && `${res.phase_week}週目・`}
+            {res.phase}
+          </p>
+          {res.phase_reason && (
+            <p className="mt-1 text-[12px] leading-relaxed text-slate-300">{res.phase_reason}</p>
+          )}
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-3">
-        <h4 className="text-[15px] font-bold">拾い出し {res.work_items.length}項目</h4>
+        <h4 className="text-[15px] font-bold">追加見積に載せる {res.work_items.length}項目</h4>
         <button
           onClick={copyForExcel}
           className="min-h-[36px] rounded-lg bg-slate-900 px-3 text-[12px] font-bold text-white"
@@ -146,8 +168,10 @@ export default function Takeoff({
         </button>
       </div>
 
-      <p className="mt-1.5 text-[12px] text-slate-500">
-        金額はAIが出しません。単価は会社ごと・時期ごとに違い、変更工事の見積は書面で提示する必要があるためです。
+      <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
+        <b>もともとの契約に含まれる工事は出していません。</b>
+        出しているのは、この変更がなければ発生しなかった分だけです。
+        金額はAIが出しません（単価は会社ごと・時期ごとに違い、変更工事の見積は書面で提示する必要があるため）。
       </p>
 
       <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
@@ -170,6 +194,11 @@ export default function Takeoff({
                       <p className="mb-1 text-[11px] font-bold text-slate-400">{heading}</p>
                     )}
                     <span className="font-bold">{w.name}</span>
+                    {w.kind === '増分' && (
+                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                        増分
+                      </span>
+                    )}
                     {w.note && (
                       <p className="mt-0.5 text-[12px] leading-relaxed text-slate-500">{w.note}</p>
                     )}
@@ -182,6 +211,26 @@ export default function Takeoff({
           </tbody>
         </table>
       </div>
+
+      {/* 検討したうえで外したことが見えないと、拾い忘れと区別がつかない */}
+      {res.already_included.length > 0 && (
+        <details className="mt-3 rounded-xl border border-slate-200 bg-white p-4">
+          <summary className="cursor-pointer text-[14px] font-bold">
+            もともとの工事に含まれるので外したもの {res.already_included.length}件
+          </summary>
+          <p className="mt-1.5 text-[12px] text-slate-500">
+            検討したうえで、追加見積の対象外と判断した項目です。
+          </p>
+          <ul className="mt-2 space-y-1.5">
+            {res.already_included.map((e, i) => (
+              <li key={i} className="text-[13px] leading-relaxed">
+                <span className="font-bold">{e.name}</span>
+                <span className="text-slate-500">　{e.why}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
 
       {res.missing_info.length > 0 && (
         <div className="mt-4 rounded-xl border-l-[6px] border-l-sky-600 border-y border-r border-slate-200 bg-white p-4">

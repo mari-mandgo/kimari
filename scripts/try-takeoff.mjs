@@ -4,23 +4,30 @@
  *   npm run dev -- -p 3001
  *   node scripts/try-takeoff.mjs
  *
- * プロンプト（lib/prompts.ts の TAKEOFF_SYSTEM）を直したら、これで出し直して見比べる。
+ * 同じ変更でも、工事のどの段階かで追加見積の中身は変わる。
+ * 契約前は工事の全部が対象、解体後は「延びた分」だけ。そこを見比べる。
  */
 const ENDPOINT = process.env.KIMARI_ENDPOINT ?? 'http://localhost:3001/api/takeoff';
 const USD_JPY = 155;
 
+const CHANGE = {
+  title: 'キッチンの位置を600mm窓側へ移動',
+  detail: 'システムキッチンを現状の位置から窓側へ600mm移動する。',
+  reason: '給排水の移設が発生するため、床下配管のやり直しが必要になる。',
+  quote: 'キッチン、もう少し窓側に寄せられないかな。60センチくらい？',
+};
+
 const CASES = [
   {
-    title: 'キッチンの位置を600mm窓側へ移動',
-    detail: 'システムキッチンを現状の位置から窓側へ600mm移動する。',
-    reason: '給排水の移設が発生するため、床下配管のやり直しが必要になる。',
-    quote: 'キッチン、もう少し窓側に寄せられないかな。60センチくらい？',
+    label: '契約前（見積を作る段階）',
+    phaseLabel: '見積提出',
+    context: 'プランと仕様が固まり、見積を作成している段階の打ち合わせ。',
   },
   {
-    title: '洗面所の床をクロスからタイルへ変更',
-    detail: '洗面所の床仕上げを、標準の塩ビタイルからタイル貼りに変更する。',
-    reason: '仕上げのグレードが上がり、下地の造作も変わるため。',
-    quote: '洗面所の床、タイルにしたいんですけど',
+    label: '解体後（現地確認）',
+    phaseLabel: '解体確認',
+    context:
+      '解体が終わり、現地を一緒に確認しながら調整を決めている打ち合わせ。スケルトンの状態。',
   },
 ];
 
@@ -29,12 +36,17 @@ for (const c of CASES) {
   const res = await fetch(ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...c, model: 'orcarouter/fusion-flash' }),
+    body: JSON.stringify({
+      ...CHANGE,
+      phaseLabel: c.phaseLabel,
+      context: c.context,
+      model: 'orcarouter/fusion-flash',
+    }),
   });
   const j = await res.json();
 
   console.log('='.repeat(70));
-  console.log(c.title);
+  console.log(c.label);
   console.log('='.repeat(70));
 
   if (!res.ok) {
@@ -42,16 +54,23 @@ for (const c of CASES) {
     continue;
   }
 
+  console.log(`判定した段階: ${j.phase_week}週目・${j.phase}`);
+  console.log(`  ${j.phase_reason}\n`);
+
+  console.log(`■ 追加見積に載せる ${j.work_items.length}項目`);
   let current = '';
   for (const w of j.work_items) {
     if (w.category !== current) {
       current = w.category;
-      console.log(`\n【${current}】`);
+      console.log(`  【${current}】`);
     }
-    const basis = w.qty_basis ? ` ←${w.qty_basis}` : '';
-    console.log(`  ${w.name}（${w.unit}）${basis}`);
-    if (w.note) console.log(`      ${w.note}`);
+    const mark = w.kind === '増分' ? ' [増分]' : '';
+    console.log(`    ${w.name}（${w.unit}）${mark}`);
+    if (w.note) console.log(`        ${w.note}`);
   }
+
+  console.log(`\n■ もともとの工事に含まれるので外した ${j.already_included.length}件`);
+  for (const e of j.already_included) console.log(`  ・${e.name} … ${e.why}`);
 
   console.log('\n■ 現調で確認すべきこと');
   for (const m of j.missing_info) console.log(`  ・${m}`);
@@ -62,6 +81,6 @@ for (const c of CASES) {
   const call = j.calls[0];
   const usd = call.costUsd ?? call.estCostUsd;
   console.log(
-    `\n[${call.servedModel} / ${((Date.now() - started) / 1000).toFixed(1)}秒 / 約${(usd * USD_JPY).toFixed(2)}円 / ${j.work_items.length}項目]\n`
+    `\n[${call.servedModel} / ${((Date.now() - started) / 1000).toFixed(1)}秒 / 約${(usd * USD_JPY).toFixed(2)}円]\n`
   );
 }

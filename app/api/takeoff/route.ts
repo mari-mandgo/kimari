@@ -12,6 +12,8 @@ export const maxDuration = 120;
 
 export type WorkItem = {
   category: string;
+  /** 新規＝この変更で初めて発生 / 増分＝もともとやるが数量が増える */
+  kind?: string;
   name: string;
   unit: string;
   /** 何によって数量が決まるか。数値は入れない */
@@ -19,8 +21,16 @@ export type WorkItem = {
   note: string;
 };
 
+/** 検討したうえで「もともとの工事に含まれる」と判断して外したもの */
+export type ExcludedItem = { name: string; why: string };
+
 export type TakeoffResponse = {
+  /** 工事のどの段階か。契約前後で差分の意味が変わる */
+  phase_week: number | null;
+  phase: string;
+  phase_reason: string;
   work_items: WorkItem[];
+  already_included: ExcludedItem[];
   /** 現調で確認すべきこと。AIには分からず人が見るしかない部分 */
   missing_info: string[];
   cautions: string[];
@@ -38,6 +48,8 @@ export async function POST(req: Request) {
       quote,
       names = [],
       projectId,
+      context = '',
+      phaseLabel = '',
       model = MODEL_AUTO,
     } = await req.json();
 
@@ -51,9 +63,9 @@ export async function POST(req: Request) {
     const scope = owner ? scopeOf(owner) : '';
 
     // 仕分け済みの項目でも固有名詞が残っていることがあるので、ここでも通す
-    const joined = [title, detail ?? '', reason ?? '', quote ?? ''].join('\n');
+    const joined = [title, detail ?? '', reason ?? '', quote ?? '', context].join('\n');
     const { masked, map } = maskPII(joined, names);
-    const [mTitle, mDetail, mReason, mQuote] = masked.split('\n');
+    const [mTitle, mDetail, mReason, mQuote, mContext] = masked.split('\n');
 
     // 自社の補正を足す。使うほど自社の型に寄っていく
     const { data, meta } = await chat({
@@ -64,20 +76,34 @@ export async function POST(req: Request) {
         detail: mDetail ?? '',
         reason: mReason,
         quote: mQuote,
+        context: mContext,
+        phaseLabel,
       }),
       model,
       json: true,
     });
 
     const parsed = parseJsonLoose<{
+      phase_week?: number;
+      phase?: string;
+      phase_reason?: string;
       work_items: WorkItem[];
+      already_included?: ExcludedItem[];
       missing_info: string[];
       cautions: string[];
     }>(data);
 
     const body: TakeoffResponse = {
+      phase_week: typeof parsed.phase_week === 'number' ? parsed.phase_week : null,
+      phase: parsed.phase ?? '',
+      phase_reason: unmask(parsed.phase_reason ?? '', map),
+      already_included: (parsed.already_included ?? []).map((e) => ({
+        name: unmask(e.name ?? '', map),
+        why: unmask(e.why ?? '', map),
+      })),
       work_items: (parsed.work_items ?? []).map((w) => ({
         category: w.category ?? '',
+        kind: w.kind ?? '新規',
         name: unmask(w.name ?? '', map),
         unit: w.unit ?? '式',
         qty_basis: unmask(w.qty_basis ?? '', map),

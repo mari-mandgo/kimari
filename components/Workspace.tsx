@@ -13,6 +13,7 @@ import FeedbackInbox from '@/components/FeedbackInbox';
 import FileBoard from '@/components/FileBoard';
 import Recorder from '@/components/Recorder';
 import Takeoff from '@/components/Takeoff';
+import { PHASES } from '@/lib/phases';
 import type { PublicUser } from '@/lib/roles';
 
 const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
@@ -68,6 +69,8 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
   const [lang, setLang] = useState('なし');
   const [showTranslated, setShowTranslated] = useState(false);
   const [meetingDate, setMeetingDate] = useState(() => new Date().toISOString().slice(0, 10));
+  /** 工事の段階。空なら打ち合わせの内容からAIが判断する */
+  const [phaseLabel, setPhaseLabel] = useState('');
   /** 原価は本番では利用者に見せない。ハッカソンの審査用に切り替えられるようにしておく */
   const [demoMode, setDemoMode] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
@@ -282,6 +285,26 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
               />
               <p className="mt-1 text-[11px] text-slate-500">「次回まで」を実際の日付に換算します</p>
             </div>
+            {/* 契約の前後で追加見積の意味が変わるので、段階は推測させず選べるようにする */}
+            <div>
+              <label className="mb-2 block text-[13px] font-bold text-slate-700">工事の段階</label>
+              <select
+                value={phaseLabel}
+                onChange={(e) => setPhaseLabel(e.target.value)}
+                className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
+              >
+                <option value="">打ち合わせの内容から判断する</option>
+                {PHASES.map((p) => (
+                  <option key={p.week} value={p.label}>
+                    {p.week}週目・{p.label}
+                    {p.week === 4 ? '（ここから契約後）' : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                契約後は、もともとの契約に含まれる工事を追加見積から外します
+              </p>
+            </div>
             <div>
               <label className="mb-2 block text-[13px] font-bold text-slate-700">
                 この案件の固有名詞（伏せる対象）
@@ -435,6 +458,8 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
                               names={project.names}
                               projectId={project.id}
                               canEditRules={me.role === '設計' || me.role === '現場管理'}
+                              context={res?.summary}
+                              phaseLabel={phaseLabel}
                             />
                           )}
                         </article>
