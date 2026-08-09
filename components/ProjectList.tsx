@@ -79,8 +79,11 @@ export default function ProjectList({
             <h1>
               <Logo size="lg" />
             </h1>
-            <p className="mt-2 text-[15px] leading-relaxed text-slate-600">
-              AIサポートで、言った言わないを、なくす現場に。
+            <p className="mt-2 text-[15px] font-bold leading-snug text-slate-900">
+              話すだけで、現場が決まる。
+            </p>
+            <p className="mt-0.5 text-[12px] leading-relaxed text-slate-500">
+              会話を、次の仕事に変えるリノベAIエージェント。
             </p>
           </div>
           <div className="shrink-0 text-right">

@@ -79,8 +79,11 @@ export default function LoginForm({
         <h1>
           <Logo size="lg" />
         </h1>
-        <p className="mt-2 text-[14px] text-slate-600">
-          AIサポートで、言った言わないを、なくす現場に。
+        <p className="mt-3 text-[17px] font-bold leading-snug text-slate-900">
+          話すだけで、現場が決まる。
+        </p>
+        <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
+          会話を、次の仕事に変えるリノベAIエージェント。
         </p>
 
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
