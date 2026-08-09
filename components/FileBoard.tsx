@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Project } from '@/lib/store';
 import { FILE_KINDS, type StoredFile } from '@/lib/file-kinds';
+import Zoomable from '@/components/Zoomable';
 
 /** 現場の写真・図面・見積。施主の共有ページにも出る */
 export default function FileBoard({ project }: { project: Project }) {
@@ -96,14 +97,19 @@ export default function FileBoard({ project }: { project: Project }) {
               {files.map((f) => (
                 <div key={f.stored} className="overflow-hidden rounded-xl border border-slate-200">
                   {f.mime === 'application/pdf' ? (
-                    <div className="flex h-28 items-center justify-center bg-slate-50 text-[12px] font-bold text-slate-500">
-                      PDF
-                    </div>
+                    <a
+                      href={`/api/projects/${project.id}/files/${f.stored}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-28 items-center justify-center bg-slate-50 text-[12px] font-bold text-slate-500"
+                    >
+                      PDFを開く
+                    </a>
                   ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Zoomable
                       src={`/api/projects/${project.id}/files/${f.stored}`}
                       alt={f.caption || f.original}
+                      caption={f.caption}
                       className="h-28 w-full object-cover"
                     />
                   )}

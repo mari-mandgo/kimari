@@ -3,6 +3,7 @@ import { findByShareToken } from '@/lib/store';
 import type { Item } from '@/app/api/analyze/route';
 import FeedbackForm from '@/components/FeedbackForm';
 import Logo from '@/components/Logo';
+import Zoomable from '@/components/Zoomable';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,15 +55,15 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
       {/* ヒーロー */}
       <header className="relative">
         {hero ? (
-          <div className="relative h-[240px] w-full overflow-hidden sm:h-[300px]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+          <div className="relative h-[300px] w-full overflow-hidden sm:h-[420px]">
+            <Zoomable
               src={`/api/share/${token}/files/${hero.stored}`}
-              alt=""
-              className="h-full w-full object-cover"
+              alt={hero.caption || '現場の写真'}
+              caption={hero.caption}
+              className="h-[300px] w-full object-cover sm:h-[420px]"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/10" />
-            <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[640px] px-5 pb-6">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/15 to-black/5" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 mx-auto w-full max-w-[640px] px-5 pb-6">
               <p className="text-[11px] font-bold tracking-[0.2em] text-white/80">
                 PROJECT STORY
               </p>
@@ -208,10 +209,10 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                       PDFを開く
                     </a>
                   ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Zoomable
                       src={`/api/share/${token}/files/${f.stored}`}
-                      alt={f.caption || ''}
+                      alt={f.caption || f.kind}
+                      caption={f.caption}
                       className="h-28 w-full object-cover"
                     />
                   )}
@@ -263,13 +264,14 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                       {shots.length > 0 && (
                         <div className="flex gap-2 overflow-x-auto pb-1">
                           {shots.slice(0, 4).map((f) => (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              key={f.stored}
-                              src={`/api/share/${token}/files/${f.stored}`}
-                              alt={f.caption || ''}
-                              className="h-24 w-32 shrink-0 rounded-lg object-cover"
-                            />
+                            <div key={f.stored} className="h-24 w-32 shrink-0">
+                              <Zoomable
+                                src={`/api/share/${token}/files/${f.stored}`}
+                                alt={f.caption || '打ち合わせの写真'}
+                                caption={f.caption}
+                                className="h-24 w-32 rounded-lg object-cover"
+                              />
+                            </div>
                           ))}
                         </div>
                       )}
