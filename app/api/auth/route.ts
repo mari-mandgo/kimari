@@ -21,8 +21,9 @@ const COOKIE_OPTIONS = {
   sameSite: 'lax' as const,
   path: '/',
   maxAge: 60 * 60 * 24 * 30,
-  // 本番ではhttpsのみ。ローカル開発では付けない
-  secure: process.env.NODE_ENV === 'production',
+  // secure を付けると http のLAN内アクセス（スマホ実機確認）で Cookie が
+  // 受け取り拒否される。公開時に https 配下へ置く際は true に戻すこと。
+  secure: false,
 };
 
 /** ログイン中のユーザーを返す */

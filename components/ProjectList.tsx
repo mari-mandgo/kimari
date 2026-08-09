@@ -1,16 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ProjectSummary } from '@/lib/store';
 import type { PublicUser } from '@/lib/roles';
 import Logo from '@/components/Logo';
 
-export default function ProjectList({ me }: { me: PublicUser }) {
+export default function ProjectList({
+  me,
+  initialProjects,
+}: {
+  me: PublicUser;
+  initialProjects: ProjectSummary[];
+}) {
   const router = useRouter();
-  const [projects, setProjects] = useState<ProjectSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 一覧はサーバーから受け取る。JSが動かない端末でも表示されるように
+  const [projects] = useState<ProjectSummary[]>(initialProjects);
   const [name, setName] = useState('');
   const [names, setNames] = useState('');
   const [creating, setCreating] = useState(false);
@@ -46,13 +52,6 @@ export default function ProjectList({ me }: { me: PublicUser }) {
     router.push('/login');
     router.refresh();
   }
-
-  useEffect(() => {
-    fetch('/api/projects')
-      .then((r) => r.json())
-      .then((j) => setProjects(j.projects ?? []))
-      .finally(() => setLoading(false));
-  }, []);
 
   async function create() {
     if (!name.trim()) return;
@@ -147,9 +146,7 @@ export default function ProjectList({ me }: { me: PublicUser }) {
         <section className="mt-8">
           <h2 className="mb-3 text-[15px] font-bold">現場の一覧</h2>
 
-          {loading && <p className="text-[14px] text-slate-500">読み込んでいます…</p>}
-
-          {!loading && projects.length === 0 && (
+          {projects.length === 0 && (
             <p className="rounded-2xl border border-dashed border-slate-300 p-6 text-center text-[14px] text-slate-500">
               まだ現場がありません。上から追加してください。
             </p>
