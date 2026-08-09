@@ -89,6 +89,7 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
   }, [loading]);
 
   const nameList = () => names.split(/[,、\s]+/).filter(Boolean);
+  const phaseWeek = PHASES.find((p) => p.label === phaseLabel)?.week;
 
   /** 現場に打ち合わせを保存する。共有リンクはここで発行される */
   async function saveMeeting(patch: Record<string, unknown>) {
@@ -98,6 +99,8 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           names: nameList(),
+          // 選ばれた工程を現場にも残す。施主ページの進行状況がこれで動く
+          ...(phaseWeek !== undefined ? { phaseWeek } : {}),
           meeting: { id: meetingId ?? undefined, date: meetingDate, ...patch },
         }),
       });

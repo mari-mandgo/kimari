@@ -157,6 +157,38 @@ export const PHASES: Phase[] = [
   },
 ];
 
+/**
+ * 施主に見せる5つの節目。14週は細かすぎるので束ねる。
+ * 施主が知りたいのは「いま何をしていて、次に何があるか」であって、週番号ではない。
+ */
+export type PhaseGroup = {
+  no: string;
+  label: string;
+  /** この節目に含まれる週 */
+  weeks: number[];
+  /** 節目を表す絵。SVGで描く */
+  icon: 'talk' | 'plan' | 'doc' | 'build' | 'home';
+};
+
+export const PHASE_GROUPS: PhaseGroup[] = [
+  { no: '01', label: '初回打合せ', weeks: [0], icon: 'talk' },
+  { no: '02', label: 'プラン・仕様', weeks: [1, 2], icon: 'plan' },
+  { no: '03', label: 'お見積・ご契約', weeks: [3, 4, 5], icon: 'doc' },
+  { no: '04', label: '工事', weeks: [6, 7, 8, 9, 10, 11, 12], icon: 'build' },
+  { no: '05', label: '竣工・お引渡し', weeks: [13, 14], icon: 'home' },
+];
+
+export function groupOfWeek(week: number | null | undefined): PhaseGroup | null {
+  if (week === null || week === undefined) return null;
+  return PHASE_GROUPS.find((g) => g.weeks.includes(week)) ?? null;
+}
+
+/** 進行率。14週を100%とする */
+export function progressOfWeek(week: number | null | undefined): number | null {
+  if (week === null || week === undefined) return null;
+  return Math.round((Math.min(Math.max(week, 0), 14) / 14) * 100);
+}
+
 export function phaseByWeek(week: number | undefined): Phase | null {
   if (week === undefined || week === null) return null;
   return PHASES.find((p) => p.week === week) ?? null;

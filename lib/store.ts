@@ -106,6 +106,12 @@ export type Project = {
   files?: StoredFile[];
   /** 施主ページの先頭に出す写真。未設定なら共通のヒーロー画像を使う */
   heroFileId?: string;
+  /**
+   * いま標準工程の何週目か（lib/phases.ts）。
+   * 打ち合わせを記録するたびに、選ばれた段階で更新される。
+   * 施主ページの進行状況の土台になる。
+   */
+  phaseWeek?: number;
   meetings: Meeting[];
   createdAt: string;
   updatedAt: string;
