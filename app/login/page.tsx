@@ -74,7 +74,7 @@ export default function LoginPage() {
           <Logo size="lg" />
         </h1>
         <p className="mt-2 text-[14px] text-slate-600">
-          打ち合わせの記録から、追加見積が必要な変更と期限を見つけます。
+          言った言わないを、なくす。
         </p>
 
         <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -102,8 +102,7 @@ export default function LoginPage() {
               <Field label="氏名">
                 <input
                   name="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  defaultValue={name}
                   placeholder="金子 麻里"
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
                 />
@@ -150,8 +149,7 @@ export default function LoginPage() {
             <input
               name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              defaultValue={email}
               autoComplete="email"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
             />
@@ -162,8 +160,7 @@ export default function LoginPage() {
               <input
                 name="password"
                 type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                defaultValue={password}
                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                 className="w-full rounded-xl border border-slate-300 px-4 py-3 pr-12 text-[15px]"
               />

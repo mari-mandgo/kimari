@@ -81,9 +81,7 @@ export default function ProjectList({ me }: { me: PublicUser }) {
               <Logo size="lg" />
             </h1>
             <p className="mt-2 text-[15px] leading-relaxed text-slate-600">
-              打ち合わせの記録から、
-              <strong className="text-slate-900">追加見積が必要な変更</strong>と
-              <strong className="text-slate-900">期限</strong>を見つけます。
+              言った言わないを、なくす。
             </p>
           </div>
           <div className="shrink-0 text-right">
