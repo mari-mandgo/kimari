@@ -17,21 +17,40 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  async function submit() {
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
     setBusy(true);
     setError(null);
     try {
+      // iOSの自動入力は onChange を発火させないことがあるため、
+      // 送信時に実際の入力欄から値を読む（stateはあてにしない）
+      const data = new FormData(e.currentTarget);
+      const emailNow = String(data.get('email') ?? email).trim();
+      const passwordNow = String(data.get('password') ?? password);
+      const nameNow = String(data.get('name') ?? name);
+
+      if (!emailNow || !passwordNow) {
+        throw new Error('メールアドレスとパスワードを入力してください');
+      }
+
       const r = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: mode, name, email, password, role, avatar }),
+        body: JSON.stringify({
+          action: mode,
+          name: nameNow,
+          email: emailNow,
+          password: passwordNow,
+          role,
+          avatar,
+        }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? '失敗しました');
       router.push('/');
       router.refresh();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setBusy(false);
     }
@@ -63,6 +82,7 @@ export default function LoginPage() {
             {(['login', 'register'] as const).map((m) => (
               <button
                 key={m}
+                type="button"
                 onClick={() => {
                   setMode(m);
                   setError(null);
@@ -76,10 +96,12 @@ export default function LoginPage() {
             ))}
           </div>
 
+          <form onSubmit={submit}>
           {mode === 'register' && (
             <>
               <Field label="氏名">
                 <input
+                  name="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="金子 麻里"
@@ -92,6 +114,7 @@ export default function LoginPage() {
                   {ROLES.map((r) => (
                     <button
                       key={r}
+                      type="button"
                       onClick={() => setRole(r)}
                       className={`min-h-[44px] flex-1 rounded-xl text-[14px] font-bold ${
                         role === r ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
@@ -125,6 +148,7 @@ export default function LoginPage() {
 
           <Field label="メールアドレス">
             <input
+              name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -136,6 +160,7 @@ export default function LoginPage() {
           <Field label="パスワード">
             <div className="relative">
               <input
+                name="password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -177,12 +202,13 @@ export default function LoginPage() {
           )}
 
           <button
-            onClick={submit}
-            disabled={busy || !email || !password}
+            type="submit"
+            disabled={busy}
             className="min-h-[52px] w-full rounded-xl bg-slate-900 text-[16px] font-bold text-white disabled:opacity-40"
           >
             {busy ? '処理中…' : mode === 'login' ? 'ログイン' : '登録する'}
           </button>
+          </form>
         </div>
       </div>
     </main>
