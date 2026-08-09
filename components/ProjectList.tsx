@@ -81,7 +81,7 @@ export default function ProjectList({ me }: { me: PublicUser }) {
               <Logo size="lg" />
             </h1>
             <p className="mt-2 text-[15px] leading-relaxed text-slate-600">
-              言った言わないを、なくす。
+              AIサポートで、言った言わないを、なくす現場に。
             </p>
           </div>
           <div className="shrink-0 text-right">
