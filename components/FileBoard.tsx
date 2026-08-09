@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { Project } from '@/lib/store';
-import { FILE_KINDS, type StoredFile } from '@/lib/files';
+import { FILE_KINDS, type StoredFile } from '@/lib/file-kinds';
 
 /** 現場の写真・図面・見積。施主の共有ページにも出る */
 export default function FileBoard({ project }: { project: Project }) {

@@ -8,6 +8,7 @@ import { formatCost } from '@/lib/pricing';
 import type { Project } from '@/lib/store';
 import Link from 'next/link';
 import ProjectSettings from '@/components/ProjectSettings';
+import Logo from '@/components/Logo';
 import FeedbackInbox from '@/components/FeedbackInbox';
 import FileBoard from '@/components/FileBoard';
 import type { PublicUser } from '@/lib/roles';
@@ -186,9 +187,14 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
       {/* 縦持ちのiPadを基準にした横幅。横向きでも中央に収まる */}
       <div className="mx-auto w-full max-w-[820px] px-5 py-8 sm:py-10">
         <header className="mb-7">
-          <Link href="/" className="text-[13px] font-bold text-slate-500 hover:text-slate-900">
-            ← 現場の一覧
-          </Link>
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <Link href="/" aria-label="現場の一覧へ">
+              <Logo size="sm" />
+            </Link>
+            <Link href="/" className="text-[13px] font-bold text-slate-500 hover:text-slate-900">
+              ← 現場の一覧
+            </Link>
+          </div>
           <h1 className="mt-2 text-[28px] font-bold tracking-tight">{project.name}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-slate-500">
             <span>
