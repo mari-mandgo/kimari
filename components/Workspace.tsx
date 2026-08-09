@@ -11,6 +11,7 @@ import ProjectSettings from '@/components/ProjectSettings';
 import Logo from '@/components/Logo';
 import FeedbackInbox from '@/components/FeedbackInbox';
 import FileBoard from '@/components/FileBoard';
+import Recorder from '@/components/Recorder';
 import type { PublicUser } from '@/lib/roles';
 
 const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
@@ -226,6 +227,10 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
         <ProjectSettings project={project} />
 
         <FileBoard project={project} />
+
+        <div className="mb-6">
+          <Recorder onTranscript={(text) => setTranscript(text)} />
+        </div>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
