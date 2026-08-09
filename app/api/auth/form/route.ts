@@ -5,11 +5,13 @@ import {
   findUserByEmail,
   verifyPassword,
   createSession,
+  updateUser,
   SESSION_COOKIE,
   ROLES,
   toPublic,
   type Role,
 } from '@/lib/auth';
+import { createCompany, findByInviteCode } from '@/lib/companies';
 
 export const runtime = 'nodejs';
 
@@ -50,13 +52,33 @@ export async function POST(req: Request) {
   if (action === 'register') {
     const roleRaw = String(form.get('role') ?? '');
     const role: Role = (ROLES as readonly string[]).includes(roleRaw) ? (roleRaw as Role) : '設計';
+    const code = String(form.get('companyCode') ?? '').trim();
+    let joining: string | undefined;
+    if (code) {
+      const found = findByInviteCode(code);
+      if (!found) return back('会社コードが見つかりません');
+      joining = found.id;
+    }
+
     const { user, error } = createUser({
       name: String(form.get('name') ?? ''),
       email,
       password,
       role,
+      companyId: joining,
     });
     if (error || !user) return back(error ?? '登録できませんでした');
+
+    const companyName = String(form.get('companyName') ?? '').trim();
+    if (!joining && companyName) {
+      const created = createCompany({
+        name: companyName,
+        address: String(form.get('companyAddress') ?? ''),
+        tel: String(form.get('companyTel') ?? ''),
+        ownerUserId: user.id,
+      });
+      updateUser(user.id, { companyId: created.id });
+    }
     jar.set(SESSION_COOKIE, createSession(user.id), COOKIE_OPTIONS);
     return redirect('/');
   }

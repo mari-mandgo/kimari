@@ -13,6 +13,7 @@ import {
   ROLES,
   type Role,
 } from '@/lib/auth';
+import { createCompany, findByInviteCode } from '@/lib/companies';
 
 export const runtime = 'nodejs';
 
@@ -40,17 +41,41 @@ export async function POST(req: Request) {
 
   if (body.action === 'register') {
     const role: Role = ROLES.includes(body.role) ? body.role : '設計';
+
+    // 会社コードが入っていれば既存の会社へ参加。会社名では突き合わせない
+    let joining: string | undefined;
+    if (String(body.companyCode ?? '').trim()) {
+      const found = findByInviteCode(String(body.companyCode));
+      if (!found) {
+        return NextResponse.json({ error: '会社コードが見つかりません' }, { status: 400 });
+      }
+      joining = found.id;
+    }
+
     const { user, error } = createUser({
       name: body.name ?? '',
       email: body.email ?? '',
       password: body.password ?? '',
       role,
+      companyId: joining,
       avatar: body.avatar,
     });
     if (error || !user) return NextResponse.json({ error }, { status: 400 });
 
+    // コードでの参加でなく、会社名が入っていれば新しい会社を作る
+    let created = null;
+    if (!joining && String(body.companyName ?? '').trim()) {
+      created = createCompany({
+        name: String(body.companyName),
+        address: body.companyAddress,
+        tel: body.companyTel,
+        ownerUserId: user.id,
+      });
+      updateUser(user.id, { companyId: created.id });
+    }
+
     jar.set(SESSION_COOKIE, createSession(user.id), COOKIE_OPTIONS);
-    return NextResponse.json({ user });
+    return NextResponse.json({ user, company: created });
   }
 
   if (body.action === 'login') {

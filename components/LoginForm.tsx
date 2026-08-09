@@ -15,6 +15,8 @@ export default function LoginForm({
   const router = useRouter();
   const [mode, setMode] = useState<'login' | 'register'>(initialMode ?? 'login');
   const [name, setName] = useState('');
+  /** 会社は名前では突き合わせない。作るか、コードで参加するかのどちらか */
+  const [companyMode, setCompanyMode] = useState<'create' | 'join'>('create');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<string>(ROLES[0]);
@@ -45,6 +47,10 @@ export default function LoginForm({
         body: JSON.stringify({
           action: mode,
           name: nameNow,
+          companyName: String(data.get('companyName') ?? ''),
+          companyAddress: String(data.get('companyAddress') ?? ''),
+          companyTel: String(data.get('companyTel') ?? ''),
+          companyCode: String(data.get('companyCode') ?? ''),
           email: emailNow,
           password: passwordNow,
           role,
@@ -117,6 +123,66 @@ export default function LoginForm({
                   placeholder="金子 麻里"
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
                 />
+              </Field>
+
+              <Field label="会社">
+                <div className="flex gap-2">
+                  {(
+                    [
+                      ['create', 'あたらしく登録'],
+                      ['join', '会社コードで参加'],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setCompanyMode(key)}
+                      className={`min-h-[44px] flex-1 rounded-xl text-[13px] font-bold ${
+                        companyMode === key ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {companyMode === 'create' ? (
+                  <div className="mt-2 space-y-2">
+                    <input
+                      name="companyName"
+                      placeholder="株式会社◯◯工務店"
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
+                    />
+                    <input
+                      name="companyAddress"
+                      placeholder="所在地（例：横浜市◯◯区…）"
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
+                    />
+                    <input
+                      name="companyTel"
+                      placeholder="電話番号"
+                      inputMode="tel"
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]"
+                    />
+                    <p className="text-[12px] leading-relaxed text-slate-500">
+                      登録すると<b>会社コード</b>が発行されます。同僚の方は、そのコードで参加してください。
+                      <b>会社名が同じでも、コードが違えば別の会社として扱います。</b>
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-2">
+                    <input
+                      name="companyCode"
+                      placeholder="ABC234"
+                      maxLength={6}
+                      autoCapitalize="characters"
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3 font-mono text-[16px] tracking-widest uppercase"
+                    />
+                    <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
+                      会社の管理者から受け取ったコードを入れてください。
+                    </p>
+                  </div>
+                )}
               </Field>
 
               <Field label="立場">

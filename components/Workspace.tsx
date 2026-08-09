@@ -12,6 +12,7 @@ import Logo from '@/components/Logo';
 import FeedbackInbox from '@/components/FeedbackInbox';
 import FileBoard from '@/components/FileBoard';
 import Recorder from '@/components/Recorder';
+import Takeoff from '@/components/Takeoff';
 import type { PublicUser } from '@/lib/roles';
 
 const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
@@ -426,6 +427,15 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
                             <p className="mt-3 border-l-2 border-current/25 pl-3 text-[13px] opacity-60">
                               「{it.quote}」
                             </p>
+                          )}
+                          {/* 見積を作るのは追加見積の対象だけ。他の分類には出さない */}
+                          {c === 'cost_impact' && (
+                            <Takeoff
+                              item={it}
+                              names={project.names}
+                              projectId={project.id}
+                              canEditRules={me.role === '設計' || me.role === '現場管理'}
+                            />
                           )}
                         </article>
                       ))}

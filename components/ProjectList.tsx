@@ -10,9 +10,12 @@ import Logo from '@/components/Logo';
 export default function ProjectList({
   me,
   initialProjects,
+  companyCode,
 }: {
   me: PublicUser;
   initialProjects: ProjectSummary[];
+  /** 同僚を会社に招くためのコード。会社に属している人にだけ出す */
+  companyCode?: string;
 }) {
   const router = useRouter();
   // 一覧はサーバーから受け取る。JSが動かない端末でも表示されるように
@@ -94,12 +97,33 @@ export default function ProjectList({
               )}
               <span className="text-[13px] font-bold">{me.name}</span>
             </div>
-            <p className="text-[11px] text-slate-500">{me.role}</p>
+            <p className="text-[11px] text-slate-500">
+              {me.companyName ? `${me.companyName}・${me.role}` : me.role}
+            </p>
             <button onClick={logout} className="mt-1 text-[11px] text-slate-400 underline">
               ログアウト
             </button>
           </div>
         </header>
+
+        {/* 同僚を会社へ招くコード。拾い出しのルールはこの単位で共有される */}
+        {companyCode && (
+          <section className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-[15px] font-bold">会社コード</h2>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <span className="font-mono text-[22px] font-bold tracking-widest">{companyCode}</span>
+              <button
+                onClick={() => navigator.clipboard.writeText(companyCode)}
+                className="min-h-[36px] rounded-lg bg-slate-900 px-3 text-[12px] font-bold text-white"
+              >
+                コピー
+              </button>
+            </div>
+            <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
+              同じ会社の方は、新規登録のときにこのコードを入れてください。拾い出しのルールが共有されます。
+            </p>
+          </section>
+        )}
 
         {/* 職人は招待コードで現場に入る */}
         <section className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

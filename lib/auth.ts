@@ -29,6 +29,8 @@ export type User = {
   name: string;
   email: string;
   role: Role;
+  /** 所属する会社のID。会社名では突き合わせない（同名の別会社があるため） */
+  companyId?: string;
   /** プロフィール画像。data URL で持つ（外部ストレージを使わないため） */
   avatar?: string;
   passwordHash: string;
@@ -37,6 +39,7 @@ export type User = {
 
 import type { PublicUser } from './roles';
 export type { PublicUser };
+import { getCompany } from './companies';
 
 type Session = { token: string; userId: string; expiresAt: string };
 
@@ -80,7 +83,8 @@ export function listUsers(): User[] {
 export function toPublic(u: User): PublicUser {
   const { passwordHash: _omit, ...rest } = u;
   void _omit;
-  return rest;
+  // 会社名は表示のためだけに添える。判定に使うのは常に companyId のほう
+  return { ...rest, companyName: getCompany(u.companyId)?.name };
 }
 
 export function findUserByEmail(email: string): User | null {
@@ -97,6 +101,7 @@ export function createUser(input: {
   email: string;
   password: string;
   role: Role;
+  companyId?: string;
   avatar?: string;
 }): { user?: PublicUser; error?: string } {
   const email = input.email.trim().toLowerCase();
@@ -110,6 +115,7 @@ export function createUser(input: {
     name: input.name.trim(),
     email,
     role: input.role,
+    companyId: input.companyId,
     avatar: input.avatar,
     passwordHash: hashPassword(input.password),
     createdAt: new Date().toISOString(),
@@ -120,7 +126,10 @@ export function createUser(input: {
   return { user: toPublic(user) };
 }
 
-export function updateUser(id: string, patch: Partial<Pick<User, 'name' | 'role' | 'avatar'>>): PublicUser | null {
+export function updateUser(
+  id: string,
+  patch: Partial<Pick<User, 'name' | 'role' | 'avatar' | 'companyId'>>
+): PublicUser | null {
   const users = listUsers();
   const u = users.find((x) => x.id === id);
   if (!u) return null;
