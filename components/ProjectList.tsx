@@ -100,9 +100,14 @@ export default function ProjectList({
             <p className="text-[11px] text-slate-500">
               {me.companyName ? `${me.companyName}・${me.role}` : me.role}
             </p>
-            <button onClick={logout} className="mt-1 text-[11px] text-slate-400 underline">
-              ログアウト
-            </button>
+            <div className="mt-1 flex items-center justify-end gap-3">
+              <Link href="/me" className="text-[11px] text-slate-500 underline">
+                マイページ
+              </Link>
+              <button onClick={logout} className="text-[11px] text-slate-400 underline">
+                ログアウト
+              </button>
+            </div>
           </div>
         </header>
 

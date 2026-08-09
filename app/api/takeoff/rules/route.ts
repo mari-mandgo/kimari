@@ -35,6 +35,16 @@ async function resolve(projectId: unknown) {
   return { me, scope, sameCompany };
 }
 
+/** マイページ用。自分の範囲に貯まっているルールを返す */
+export async function GET() {
+  const me = await currentUser();
+  if (!me) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
+  return NextResponse.json({
+    rules: listRules(scopeOf(me)),
+    canEdit: CAN_EDIT.includes(me.role),
+  });
+}
+
 export async function POST(req: Request) {
   const { projectId, text, context = '', target = 'company' } = await req.json();
   const r = await resolve(projectId);
@@ -69,6 +79,19 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   const { projectId, id } = await req.json();
+
+  // マイページからは現場を経由しない。自分の範囲のルールだけを消せる
+  if (!projectId) {
+    const me = await currentUser();
+    if (!me) return NextResponse.json({ error: 'ログインが必要です' }, { status: 401 });
+    if (!CAN_EDIT.includes(me.role)) {
+      return NextResponse.json({ error: '取り消せるのは設計・現場管理の方だけです' }, { status: 403 });
+    }
+    const scope = scopeOf(me);
+    removeRule(String(id), scope);
+    return NextResponse.json({ rules: listRules(scope) });
+  }
+
   const r = await resolve(projectId);
   if ('error' in r) return NextResponse.json({ error: r.error }, { status: r.status });
 
