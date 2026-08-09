@@ -53,6 +53,8 @@ export default function Recorder({
   const [speechAvailable, setSpeechAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [transcribing, setTranscribing] = useState(false);
 
   const recogRef = useRef<SpeechRecognitionLike | null>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
@@ -67,12 +69,34 @@ export default function Recorder({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /** 録音（またはファイル）をローカルのWhisperで文字起こしする。本命の経路 */
+  async function transcribe(blob: Blob, name = 'recording.webm') {
+    setTranscribing(true);
+    setError(null);
+    try {
+      const form = new FormData();
+      form.set('file', new File([blob], name, { type: blob.type || 'audio/webm' }));
+      const r = await fetch('/api/transcribe', { method: 'POST', body: form });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? '文字起こしに失敗しました');
+      const text = String(j.text ?? '').trim();
+      if (!text) throw new Error('音声から文字を取り出せませんでした');
+      onTranscript(text);
+      setFinalText(text);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setTranscribing(false);
+    }
+  }
+
   async function start() {
     setError(null);
     setFinalText('');
     finalRef.current = '';
     setInterim('');
     setAudioUrl(null);
+    setAudioBlob(null);
     setElapsed(0);
 
     // 1. 録音（全端末共通。証拠としての音源を必ず残す）
@@ -86,6 +110,7 @@ export default function Recorder({
       rec.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
         const blob = new Blob(chunksRef.current, { type: rec.mimeType });
+        setAudioBlob(blob);
         setAudioUrl(URL.createObjectURL(blob));
       };
       rec.start();
@@ -208,13 +233,36 @@ export default function Recorder({
         <div className="mt-4 rounded-xl bg-slate-50 p-3">
           <p className="text-[12px] font-bold text-slate-600">録音した音声（この端末内にあります）</p>
           <audio controls src={audioUrl} className="mt-2 w-full" />
-          {speechAvailable === false && (
-            <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
-              この端末では文字起こしができないため、音声を保存して
-              PCの「文字起こし」から取り込んでください。
-            </p>
-          )}
+          <button
+            onClick={() => audioBlob && transcribe(audioBlob)}
+            disabled={transcribing || !audioBlob}
+            className="mt-3 min-h-[48px] w-full rounded-xl bg-slate-900 text-[14px] font-bold text-white disabled:opacity-40"
+          >
+            {transcribing ? '文字起こししています…（数分かかることがあります）' : 'この録音を文字起こしして記録欄へ'}
+          </button>
+          <p className="mt-2 text-[11px] leading-relaxed text-slate-500">
+            机に置いた録音は、その場の認識より、こちらの文字起こしのほうが正確です。
+            処理はこのサーバーの中だけで行われます。
+          </p>
         </div>
+      )}
+
+      {/* 別で録った音声（iPhoneのボイスメモ等）の取り込み口 */}
+      {!recording && (
+        <label className="mt-3 block cursor-pointer text-center text-[12px] font-bold text-slate-500 underline">
+          {transcribing ? '処理中…' : '録音ファイルを取り込んで文字起こし（m4a / mp3 / wav）'}
+          <input
+            type="file"
+            accept="audio/*,.m4a,.mp3,.wav,.webm"
+            className="hidden"
+            disabled={transcribing}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) transcribe(f, f.name);
+              e.target.value = '';
+            }}
+          />
+        </label>
       )}
 
       {error && <p className="mt-3 text-[13px] text-rose-700">{error}</p>}
