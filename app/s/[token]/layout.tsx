@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { findByShareToken } from '@/lib/store';
 import { listUsers } from '@/lib/auth';
@@ -158,6 +159,27 @@ export default async function ShareLayout({
               </ul>
             </div>
           )}
+          {/* どのページからでも相談できるように、左に常に置く。
+              入力欄は相談ページに集約し、ここは入口だけにする */}
+          <div className={card}>
+            <h2 className="text-[14px] font-bold">ご不明点・ご相談</h2>
+            <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
+              お気軽にご連絡ください。写真も送れます。
+            </p>
+            <Link
+              href={`/s/${token}/contact`}
+              className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-[14px] font-bold text-white"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+                <path
+                  d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4 3.5V16H6.5A2.5 2.5 0 0 1 4 13.5z"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              メッセージを送る
+            </Link>
+          </div>
         </aside>
 
         <div className="min-w-0 space-y-8">{children}</div>

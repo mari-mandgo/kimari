@@ -178,6 +178,79 @@ export const PHASE_GROUPS: PhaseGroup[] = [
   { no: '05', label: '竣工・お引渡し', weeks: [13, 14], icon: 'home' },
 ];
 
+/**
+ * 施主ページに並べる「プロジェクトの歩み」の6枚。
+ *
+ * 打ち合わせの回数で増やすのではなく、最初から6枚出す。
+ * 工事の全体像が最初から見えていたほうが、施主は先を見通せる。
+ * 済んだところは明るく、これからのところは沈めて出す。
+ *
+ * 写真は現場の実物ではなく、共通のイメージを使う。
+ * 現場の写真は「資料・写真」と「打ち合わせの記録」にあるので、
+ * ここは流れを掴むための絵でよい。
+ */
+export type StoryStep = {
+  no: string;
+  label: string;
+  /** この段階に入る週。ここを過ぎていれば「済み」 */
+  fromWeek: number;
+  detail: string;
+  icon: PhaseGroup['icon'];
+  /** public/story/ に置く画像。無ければ絵柄なしで出す */
+  image: string;
+};
+
+export const STORY_STEPS: StoryStep[] = [
+  {
+    no: '01',
+    label: '初回打ち合わせ',
+    fromWeek: 0,
+    detail: 'ご要望やイメージをうかがい、現地を調査します。',
+    icon: 'talk',
+    image: '/story/01.jpg',
+  },
+  {
+    no: '02',
+    label: 'プラン・仕様決定',
+    fromWeek: 1,
+    detail: '間取りを決め、サンプルを見ながら仕上げと設備を選びます。',
+    icon: 'plan',
+    image: '/story/02.jpg',
+  },
+  {
+    no: '03',
+    label: 'お見積・ご契約',
+    fromWeek: 3,
+    detail: 'お見積と工程表をご提示し、内容と金額を確定します。',
+    icon: 'doc',
+    image: '/story/03.jpg',
+  },
+  {
+    no: '04',
+    label: '工事開始',
+    fromWeek: 6,
+    detail: '近隣へご挨拶し、養生をして解体に入ります。',
+    icon: 'build',
+    image: '/story/04.jpg',
+  },
+  {
+    no: '05',
+    label: '工事の様子',
+    fromWeek: 8,
+    detail: '下地と配管が進み、壁と床ができていきます。',
+    icon: 'build',
+    image: '/story/05.jpg',
+  },
+  {
+    no: '06',
+    label: '竣工・お引渡し',
+    fromWeek: 13,
+    detail: '一緒に仕上がりを確認し、鍵をお渡しします。',
+    icon: 'home',
+    image: '/story/06.jpg',
+  },
+];
+
 export function groupOfWeek(week: number | null | undefined): PhaseGroup | null {
   if (week === null || week === undefined) return null;
   return PHASE_GROUPS.find((g) => g.weeks.includes(week)) ?? null;

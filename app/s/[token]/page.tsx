@@ -3,7 +3,7 @@ import path from 'node:path';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { findByShareToken } from '@/lib/store';
-import { PHASE_GROUPS, groupOfWeek } from '@/lib/phases';
+import { PHASE_GROUPS, STORY_STEPS, groupOfWeek } from '@/lib/phases';
 import type { Item } from '@/app/api/analyze/route';
 import FeedbackForm from '@/components/FeedbackForm';
 import PhaseIcon from '@/components/PhaseIcon';
@@ -64,17 +64,15 @@ export default async function ShareHome({ params }: { params: Promise<{ token: s
   const photosFor = (meetingId: string, isLatest: boolean) =>
     photos.filter((f) => (f.meetingId ? f.meetingId === meetingId : isLatest));
 
-  /** 上に並べる写真カード。古い順に 01,02… と振る */
-  const story = [...meetings]
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .map((m, i, arr) => ({
-      id: m.id,
-      date: m.date,
-      no: String(i + 1).padStart(2, '0'),
-      count: i + 1,
-      summary: m.summary,
-      photo: photosFor(m.id, i === arr.length - 1)[0] ?? null,
-    }));
+  /** 歩みの絵。public/story/ に置かれていれば使う。無ければアイコンで出す */
+  const storyImages: Record<string, string | null> = Object.fromEntries(
+    STORY_STEPS.map((s) => [
+      s.no,
+      fs.existsSync(path.join(process.cwd(), 'public', s.image.slice(1))) ? s.image : null,
+    ])
+  );
+
+  const property = project.property;
 
   type Update = {
     kind: string;
@@ -242,42 +240,56 @@ export default async function ShareHome({ params }: { params: Promise<{ token: s
         </section>
       )}
 
-      {/* プロジェクトの歩み。眺めるもの */}
-      {story.length > 0 && (
-        <section id="story" className="scroll-mt-24">
-          <h2 className="mb-3 text-[19px] font-bold">プロジェクトの歩み</h2>
-          <div className="scroll-clean -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
-            {story.map((s) => (
-              <a
-                key={s.id}
-                href={`#m-${s.id}`}
-                className="w-[220px] shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+      {/* プロジェクトの歩み。眺めるもの。
+          回数で増やさず最初から6枚出す。全体像が見えているほうが先を見通せる */}
+      <section id="story" className="scroll-mt-24">
+        <h2 className="mb-3 text-[19px] font-bold">プロジェクトの歩み</h2>
+        <div className="scroll-clean -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+          {STORY_STEPS.map((s, i) => {
+            const next = STORY_STEPS[i + 1];
+            const reached = week !== null && week >= s.fromWeek;
+            const now = reached && (!next || week === null || week < next.fromWeek);
+            const image = storyImages[s.no];
+
+            return (
+              <div
+                key={s.no}
+                className={`w-[220px] shrink-0 overflow-hidden rounded-2xl border bg-white shadow-sm transition ${
+                  now ? 'border-slate-900' : 'border-slate-200'
+                } ${reached ? '' : 'opacity-45 grayscale'}`}
               >
                 <div className="flex items-baseline gap-2 px-4 pt-3.5">
                   <span className="text-[15px] font-bold text-slate-400">{s.no}</span>
-                  <span className="text-[14px] font-bold">第{s.count}回 打ち合わせ</span>
+                  <span className="text-[14px] font-bold">{s.label}</span>
                 </div>
-                <p className="px-4 pb-2 text-[12px] text-slate-400">{formatShort(s.date)}</p>
-                {s.photo ? (
+                <p className="flex items-center gap-2 px-4 pb-2 pt-0.5 text-[11px]">
+                  {now ? (
+                    <span className="rounded-full bg-slate-900 px-2 py-0.5 font-bold text-white">
+                      いまここ
+                    </span>
+                  ) : reached ? (
+                    <span className="text-emerald-700">完了</span>
+                  ) : (
+                    <span className="text-slate-400">これから</span>
+                  )}
+                  {s.no === '06' && property?.completionDate && (
+                    <span className="text-slate-400">{formatShort(property.completionDate)} 予定</span>
+                  )}
+                </p>
+                {image ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={`/api/share/${token}/files/${s.photo.stored}`}
-                    alt={s.photo.caption || ''}
-                    className="h-[130px] w-full object-cover"
-                  />
+                  <img src={image} alt="" className="h-[130px] w-full object-cover" />
                 ) : (
-                  <div className="flex h-[130px] w-full items-center justify-center bg-slate-100 text-[12px] text-slate-400">
-                    写真はまだありません
+                  <div className="flex h-[130px] w-full items-center justify-center bg-slate-100 text-slate-300">
+                    <PhaseIcon icon={s.icon} className="h-9 w-9" />
                   </div>
                 )}
-                <p className="line-clamp-3 p-4 text-[12px] leading-relaxed text-slate-600">
-                  {s.photo?.caption || s.summary}
-                </p>
-              </a>
-            ))}
-          </div>
-        </section>
-      )}
+                <p className="p-4 text-[12px] leading-relaxed text-slate-600">{s.detail}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* 打ち合わせの記録。読むもの */}
       <section id="log" className="scroll-mt-24">
