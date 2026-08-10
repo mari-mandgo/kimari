@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Item } from '@/app/api/analyze/route';
 import type { TakeoffResponse } from '@/app/api/takeoff/route';
 import { formatCost } from '@/lib/pricing';
@@ -33,6 +34,8 @@ export default function Takeoff({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [making, setMaking] = useState(false);
+  const router = useRouter();
   /** 拾い出しへの指摘。会社ごとに立てる項目が違うので、使う人が直せるようにする */
   const [fixOpen, setFixOpen] = useState(false);
   const [fixText, setFixText] = useState('');
@@ -102,6 +105,35 @@ export default function Takeoff({
     if (r.ok) await run();
   }
 
+  /** 拾い出しをそのまま追加見積書の器にする。金額欄は空のまま */
+  async function makeEstimate() {
+    if (!res) return;
+    setMaking(true);
+    try {
+      const r = await fetch(`/api/projects/${projectId}/estimates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          template: 'cover',
+          title: item.title,
+          sourceTitle: item.title,
+          rows: res.work_items.map((w) => ({
+            category: w.category,
+            name: w.name,
+            unit: w.unit,
+            note: w.note,
+          })),
+        }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? '作成できませんでした');
+      router.push(`/p/${projectId}/estimates/${j.estimate.id}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setMaking(false);
+    }
+  }
+
   /** Excelにそのまま貼れるタブ区切り。金額列は空のまま渡す */
   async function copyForExcel() {
     if (!res) return;
@@ -155,8 +187,15 @@ export default function Takeoff({
       <div className="flex flex-wrap items-center gap-3">
         <h4 className="text-[15px] font-bold">追加見積に載せる {res.work_items.length}項目</h4>
         <button
+          onClick={makeEstimate}
+          disabled={making}
+          className="min-h-[36px] rounded-lg bg-slate-900 px-3 text-[12px] font-bold text-white disabled:opacity-40"
+        >
+          {making ? '作成中…' : '追加見積書をつくる'}
+        </button>
+        <button
           onClick={copyForExcel}
-          className="min-h-[36px] rounded-lg bg-slate-900 px-3 text-[12px] font-bold text-white"
+          className="min-h-[36px] rounded-lg border border-slate-300 px-3 text-[12px] font-bold text-slate-700"
         >
           {copied ? 'コピーしました' : 'Excelにコピー'}
         </button>

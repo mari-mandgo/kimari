@@ -85,6 +85,10 @@ export const DEFAULT_STAGES: Stage[] = [
   { label: '竣工', date: '', done: false },
 ];
 
+// 見積書の定数・型はクライアントからも読むので lib/estimate-kinds.ts にある
+export type { Estimate, EstimateRow, EstimateTemplate } from './estimate-kinds';
+import type { Estimate } from './estimate-kinds';
+
 export type Project = {
   id: string;
   /** 現場名。「田中様邸リノベーション」など */
@@ -118,6 +122,8 @@ export type Project = {
    * 施主ページの進行状況の土台になる。
    */
   phaseWeek?: number;
+  /** 追加見積。打ち合わせの拾い出しから作られる */
+  estimates?: Estimate[];
   meetings: Meeting[];
   createdAt: string;
   updatedAt: string;

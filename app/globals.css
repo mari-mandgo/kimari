@@ -40,3 +40,49 @@ button:not(:disabled):hover {
 button:not(:disabled):active {
   transform: scale(0.98);
 }
+
+/*
+ * 印刷。見積書をそのまま紙とPDFに出すため。
+ * 操作用の部品（.no-print）は落とし、入力欄は枠を消して文字だけ残す。
+ */
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  /* 入力欄と分かる装飾を消す。印刷物に編集中の見た目を残さない */
+  input,
+  textarea,
+  select {
+    border: none !important;
+    background: transparent !important;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* 数字の増減ボタンは紙に不要 */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    display: none;
+  }
+
+  /* 表が途中で切れないように */
+  table {
+    page-break-inside: auto;
+  }
+  tr {
+    page-break-inside: avoid;
+  }
+  thead {
+    display: table-header-group;
+  }
+}
