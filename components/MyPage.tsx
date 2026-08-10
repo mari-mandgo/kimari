@@ -20,6 +20,7 @@ export default function MyPage({ me }: { me: PublicUser }) {
 
   const [name, setName] = useState(me.name);
   const [role, setRole] = useState<string>(me.role);
+  const [avatar, setAvatar] = useState<string | undefined>(me.avatar);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,41 @@ export default function MyPage({ me }: { me: PublicUser }) {
     load();
   }, []);
 
+  /**
+   * 顔写真を読み込む。data URL で持つので、そのまま入れると数百KBになる。
+   * users.json は毎リクエスト読むファイルなので、正方形256pxに縮めてから保存する。
+   */
+  function pickAvatar(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const SIZE = 256;
+        const canvas = document.createElement('canvas');
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return setAvatar(String(reader.result));
+        // 短辺に合わせて中央を切り出す。顔が端に寄らないように
+        const side = Math.min(img.width, img.height);
+        ctx.drawImage(
+          img,
+          (img.width - side) / 2,
+          (img.height - side) / 2,
+          side,
+          side,
+          0,
+          0,
+          SIZE,
+          SIZE
+        );
+        setAvatar(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function saveProfile() {
     setBusy(true);
     setError(null);
@@ -54,7 +90,8 @@ export default function MyPage({ me }: { me: PublicUser }) {
       const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'update', name, role }),
+        // 空文字は「写真を外す」の意味。未指定と区別するため必ず送る
+        body: JSON.stringify({ action: 'update', name, role, avatar: avatar ?? '' }),
       });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error ?? '保存できませんでした');
@@ -125,6 +162,43 @@ export default function MyPage({ me }: { me: PublicUser }) {
           <h2 className="text-[15px] font-bold">登録内容</h2>
 
           <div className="mt-3 space-y-3">
+            {/* 顔写真。施主ページのメンバー欄にも出る */}
+            <div>
+              <span className="text-[13px] font-bold text-slate-600">顔写真</span>
+              <div className="mt-1 flex items-center gap-3">
+                <label className="relative h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-full border border-slate-300 bg-slate-50">
+                  {avatar ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={avatar} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-[11px] text-slate-400">
+                      選ぶ
+                    </span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) pickAvatar(f);
+                    }}
+                  />
+                </label>
+                <div className="text-[12px] leading-relaxed text-slate-500">
+                  <p>丸く切り出して保存します。施主のページにも出ます。</p>
+                  {avatar && (
+                    <button
+                      onClick={() => setAvatar(undefined)}
+                      className="mt-1 text-[12px] text-slate-400 underline"
+                    >
+                      写真を外す
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <label className="block">
               <span className="text-[13px] font-bold text-slate-600">氏名</span>
               <input

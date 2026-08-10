@@ -104,7 +104,8 @@ export async function POST(req: Request) {
     const updated = updateUser(me.id, {
       name: body.name ?? me.name,
       role: ROLES.includes(body.role) ? body.role : me.role,
-      avatar: body.avatar ?? me.avatar,
+      // 空文字は「写真を外す」。未指定（undefined）なら今の写真を残す
+      avatar: typeof body.avatar === 'string' ? body.avatar || undefined : me.avatar,
     });
     return NextResponse.json({ user: updated });
   }
