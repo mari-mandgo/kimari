@@ -3,18 +3,25 @@
 import { useState } from 'react';
 
 /**
- * 施主が、その回について気づいたことをその場で送るためのフォーム。
+ * 施主が気づいたことをその場で送るためのフォーム。
  * 見た瞬間に言えないと忘れてしまう、という前提で置いている。
+ *
+ * 置き場所で文言が変わる。
+ * meeting … 打ち合わせの記録の下。その回についての指摘
+ * general … 左の相談窓口。打ち合わせに限らない問い合わせ
  */
 export default function FeedbackForm({
   token,
   meetingId,
   sentCount,
+  variant = 'meeting',
 }: {
   token: string;
   meetingId: string;
   sentCount: number;
+  variant?: 'meeting' | 'general';
 }) {
+  const isGeneral = variant === 'general';
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [body, setBody] = useState('');
@@ -57,8 +64,8 @@ export default function FeedbackForm({
           onClick={() => setOpen(true)}
           className="min-h-[44px] w-full rounded-xl border border-slate-300 bg-white text-[14px] font-bold text-slate-700"
         >
-          この回について伝える
-          {sentCount > 0 && (
+          {isGeneral ? 'ご相談はこちらから' : 'この回について伝える'}
+          {sentCount > 0 && !isGeneral && (
             <span className="ml-2 text-[12px] font-normal text-slate-400">
               送信済み {sentCount}件
             </span>
@@ -67,9 +74,19 @@ export default function FeedbackForm({
       ) : (
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
           <p className="text-[13px] leading-relaxed text-slate-600">
-            気になったこと、思い出したこと、認識が違うところ。
-            <br />
-            短くて構いませんので、そのままお書きください。
+            {isGeneral ? (
+              <>
+                打ち合わせのことでも、それ以外のことでも構いません。
+                <br />
+                短くて構いませんので、そのままお書きください。
+              </>
+            ) : (
+              <>
+                気になったこと、思い出したこと、認識が違うところ。
+                <br />
+                短くて構いませんので、そのままお書きください。
+              </>
+            )}
           </p>
           <input
             value={name}
@@ -81,7 +98,11 @@ export default function FeedbackForm({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={4}
-            placeholder="例：洗面所のタイル、白ではなくグレーで話していたと思います"
+            placeholder={
+              isGeneral
+                ? '例：工事の音について、隣の方から言われたことがあり相談したいです'
+                : '例：洗面所のタイル、白ではなくグレーで話していたと思います'
+            }
             className="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-[14px] leading-relaxed"
           />
           {error && <p className="mt-2 text-[13px] text-rose-700">{error}</p>}

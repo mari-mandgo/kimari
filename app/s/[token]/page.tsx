@@ -281,6 +281,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                   token={token}
                   meetingId={meetings[0].id}
                   sentCount={(meetings[0].feedbacks ?? []).length}
+                  variant="general"
                 />
               </div>
             ) : (
