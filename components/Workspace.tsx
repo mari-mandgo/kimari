@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import type { AnalyzeResponse, Item } from '@/app/api/analyze/route';
@@ -16,6 +16,7 @@ import Takeoff from '@/components/Takeoff';
 import MeetingList from '@/components/MeetingList';
 import ContractScope from '@/components/ContractScope';
 import { PHASES } from '@/lib/phases';
+import { ESTIMATE_TEMPLATES } from '@/lib/estimate-kinds';
 import type { PublicUser } from '@/lib/roles';
 
 const LANGS = ['なし', 'ベトナム語', '英語', 'ミャンマー語', 'インドネシア語'];
@@ -53,11 +54,26 @@ const CATEGORY = {
   },
 } as const;
 
+/**
+ * 左のメニュー。
+ * 縦に長い1枚ページだと、どこに何があるか分からなくなるので section で切り替える。
+ * 画面が狭いときは上部の横並びメニューになる（隠さない。1タップで移れるように）。
+ */
+const TABS = [
+  { key: 'top', label: 'トップ' },
+  { key: 'meeting', label: '打ち合わせ' },
+  { key: 'estimates', label: '追加見積' },
+  { key: 'files', label: '資料・図面・写真' },
+  { key: 'info', label: '現場の情報' },
+] as const;
+type Section = (typeof TABS)[number]['key'];
+
 const ORDER: Item['category'][] = ['cost_impact', 'risk', 'decision_no_cost', 'pending'];
 
 const STEPS = ['個人情報を伏せています', 'ルーターがモデルを選んでいます', '会話を仕分けています'];
 
 export default function Workspace({ project, me }: { project: Project; me: PublicUser }) {
+  const [section, setSection] = useState<Section>('top');
   const [transcript, setTranscript] = useState('');
   const [names, setNames] = useState(project.names.join(', '));
   const [loading, setLoading] = useState(false);
@@ -191,48 +207,92 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
 
   const costCount = grouped('cost_impact').length;
   const riskCount = grouped('risk').length;
+  const estimates = project.estimates ?? [];
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
-      {/* 縦持ちのiPadを基準にした横幅。横向きでも中央に収まる */}
-      <div className="mx-auto w-full max-w-[820px] px-5 py-8 sm:py-10">
-        <header className="mb-7">
-          <div className="mb-5 flex items-center justify-between gap-4">
-            <Link href="/" aria-label="現場の一覧へ">
-              <Logo size="sm" />
-            </Link>
-            <Link href="/" className="text-[13px] font-bold text-slate-500 hover:text-slate-900">
-              ← 現場の一覧
-            </Link>
-          </div>
-          <h1 className="mt-2 text-[28px] font-bold tracking-tight">{project.name}</h1>
-          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-slate-500">
-            <span>
-              {me.name}（{me.role}）
-            </span>
-            {project.inviteCode && (
-              <span className="flex items-center gap-1.5">
-                招待コード
-                <code className="rounded-md bg-slate-200 px-2 py-0.5 font-mono text-[13px] font-bold text-slate-800">
-                  {project.inviteCode}
-                </code>
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-slate-100/90 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-[1240px] items-center gap-4 px-5 py-3">
+          <Link href="/" aria-label="現場の一覧へ">
+            <Logo size="sm" />
+          </Link>
+          <h1 className="min-w-0 truncate text-[16px] font-bold">{project.name}</h1>
+          <Link
+            href="/"
+            className="ml-auto shrink-0 text-[13px] font-bold text-slate-500 hover:text-slate-900"
+          >
+            ← 現場の一覧
+          </Link>
+        </div>
+      </header>
+
+      <div className="mx-auto grid w-full max-w-[1240px] gap-6 px-5 py-6 lg:grid-cols-[220px_minmax(0,1fr)]">
+        {/* 左：どこに何があるかを固定する。縦に長い1枚ページだと迷うため */}
+        {/* min-w-0 が無いと、メニューが列の幅を押し広げて横スクロールが出る */}
+        <nav className="sticky top-[52px] z-10 -mx-5 min-w-0 bg-slate-100/95 px-5 py-2 backdrop-blur lg:top-[60px] lg:mx-0 lg:self-start lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
+          <ul className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+            {TABS.map((t) => (
+              <li key={t.key} className="shrink-0">
                 <button
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(project.inviteCode as string);
-                    setCopied('invite');
-                    setTimeout(() => setCopied(null), 1800);
-                  }}
-                  className="underline"
+                  onClick={() => setSection(t.key)}
+                  className={`w-full whitespace-nowrap rounded-xl px-4 py-2.5 text-left text-[14px] font-bold ${
+                    section === t.key
+                      ? 'bg-slate-900 text-white'
+                      : 'bg-white text-slate-600 hover:text-slate-900'
+                  }`}
                 >
-                  {copied === 'invite' ? 'コピーしました' : 'コピー'}
+                  {t.label}
+                  {t.key === 'meeting' && project.meetings.length > 0 && (
+                    <span
+                      className={`ml-1.5 text-[12px] font-normal ${
+                        section === t.key ? 'text-slate-300' : 'text-slate-400'
+                      }`}
+                    >
+                      {project.meetings.length}
+                    </span>
+                  )}
+                  {t.key === 'estimates' && estimates.length > 0 && (
+                    <span
+                      className={`ml-1.5 text-[12px] font-normal ${
+                        section === t.key ? 'text-slate-300' : 'text-slate-400'
+                      }`}
+                    >
+                      {estimates.length}
+                    </span>
+                  )}
                 </button>
-              </span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-4 hidden rounded-xl bg-white p-4 lg:block">
+            <p className="text-[12px] text-slate-500">
+              {me.name}（{me.role}）
+            </p>
+            {project.inviteCode && (
+              <div className="mt-2 border-t border-slate-100 pt-2">
+                <p className="text-[11px] text-slate-400">職人の招待コード</p>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <code className="font-mono text-[14px] font-bold">{project.inviteCode}</code>
+                  <button
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(project.inviteCode as string);
+                      setCopied('invite');
+                      setTimeout(() => setCopied(null), 1800);
+                    }}
+                    className="text-[11px] text-slate-400 underline"
+                  >
+                    {copied === 'invite' ? '済' : 'コピー'}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
-        </header>
+        </nav>
 
+        <div className="min-w-0">
         {/* 施主へ渡すURL。常に見える場所に置く */}
-        {shareToken && (
+        {section === 'top' && shareToken && (
           <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
@@ -268,15 +328,123 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
           </section>
         )}
 
-        <FeedbackInbox project={project} />
+        {/* トップ：初めて開いた人が、何をどの順でやるのか分かるようにする */}
+        {section === 'top' && (
+          <>
+            <FeedbackInbox project={project} />
 
-        <ProjectSettings project={project} />
+            <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h2 className="text-[15px] font-bold">使い方</h2>
+              <ol className="mt-3 space-y-4">
+                {[
+                  {
+                    n: '1',
+                    t: '打ち合わせを録音する',
+                    d: 'スマホやPCをテーブルに置いて録音します。あとから音声ファイルを取り込むこともできます。文字起こしはこの端末とサーバーの中だけで行い、音声を外部へ送りません。',
+                  },
+                  {
+                    n: '2',
+                    t: '「仕分ける」を押す',
+                    d: '会話が4つに分かれます。追加見積が必要な変更／金額の変わらない決定／保留と期限／言った言わないになりそうな箇所。個人情報は伏せてから処理します。',
+                  },
+                  {
+                    n: '3',
+                    t: '拾い出して、見積書にする',
+                    d: '「キッチンを600mm動かす」から、実際に発生する工事項目を出します。当初見積書を読み込んでおくと、契約に含まれる工事を避けて、追加になる分だけを出します。',
+                  },
+                  {
+                    n: '4',
+                    t: '施主ページに公開する',
+                    d: '中身を確かめてから公開します。仕分けただけでは施主に見えません。公開すると、上のURLのページへ積み上がります。',
+                  },
+                ].map((s) => (
+                  <li key={s.n} className="flex gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[13px] font-bold text-white">
+                      {s.n}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[15px] font-bold">{s.t}</p>
+                      <p className="mt-0.5 text-[13px] leading-relaxed text-slate-600">{s.d}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
 
-        <FileBoard project={project} />
+              <div className="mt-5 rounded-xl bg-slate-50 p-4">
+                <p className="text-[13px] font-bold">試してみる</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-slate-600">
+                  録音がなくても動きを確かめられます。「打ち合わせ」を開いて
+                  <b>「サンプル」→「仕分ける」</b>を押してください。
+                  実際の打ち合わせの記録が入り、1分ほどで仕分けの結果が出ます。
+                </p>
+                <button
+                  onClick={() => {
+                    setTranscript(SAMPLE_TRANSCRIPT);
+                    setNames([...SAMPLE_NAMES].join(', '));
+                    setSection('meeting');
+                  }}
+                  className="mt-3 min-h-[44px] rounded-xl bg-slate-900 px-5 text-[14px] font-bold text-white"
+                >
+                  サンプルを入れて開く
+                </button>
+              </div>
+            </section>
 
-        {/* 当初見積書を読むと、拾い出しの差分判定が推測でなく事実にもとづく */}
-        <ContractScope project={project} />
+            <div className="mb-6">
+              <Recorder onTranscript={(text) => setTranscript(text)} />
+            </div>
+          </>
+        )}
 
+        {section === 'info' && (
+          <>
+            <ProjectSettings project={project} />
+            {/* 当初見積書を読むと、拾い出しの差分判定が推測でなく事実にもとづく */}
+            <ContractScope project={project} />
+          </>
+        )}
+
+        {section === 'files' && <FileBoard project={project} />}
+
+        {section === 'estimates' && (
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="text-[15px] font-bold">追加見積 {estimates.length}件</h2>
+            <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
+              拾い出しの結果から作られます。数量と単価を入れて、印刷やPDFで出せます。
+            </p>
+            {estimates.length === 0 ? (
+              <p className="mt-3 rounded-xl border border-dashed border-slate-300 p-6 text-center text-[13px] text-slate-500">
+                まだありません。「打ち合わせ」で拾い出しを出したあと、
+                「追加見積書をつくる」から作成できます。
+              </p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {[...estimates]
+                  .sort((a, b) => b.no - a.no)
+                  .map((e) => (
+                    <li key={e.id}>
+                      <Link
+                        href={`/p/${project.id}/estimates/${e.id}`}
+                        className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-slate-200 p-4 hover:border-slate-400"
+                      >
+                        <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-bold text-white">
+                          No.{e.no}
+                        </span>
+                        <span className="text-[15px] font-bold">{e.title}</span>
+                        <span className="text-[12px] text-slate-500">
+                                        {ESTIMATE_TEMPLATES.find((t) => t.key === e.template)?.label} ・{' '}
+                          {e.rows.length}項目 ・ {e.issuedOn}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </section>
+        )}
+
+        {section === 'meeting' && (
+        <>
         {/* 保存済みの打ち合わせ。ここで施主ページへの公開を決める */}
         <MeetingList
           projectId={project.id}
@@ -605,6 +773,9 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
             </section>
           </>
         )}
+        </>
+        )}
+        </div>
       </div>
     </main>
   );
