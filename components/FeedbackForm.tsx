@@ -76,7 +76,8 @@ export default function FeedbackForm({
   const label = isGeneral ? 'メッセージを送る' : isFile ? 'これについて質問する' : 'この回について伝える';
 
   return (
-    <div className={isFile ? 'mt-3' : 'mt-4'}>
+    // 資料の下では置き場所側で余白を持つので、ここでは付けない
+    <div className={isFile ? '' : 'mt-4'}>
       {!open ? (
         <button
           onClick={() => setOpen(true)}

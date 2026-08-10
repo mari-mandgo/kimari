@@ -43,10 +43,12 @@ export default async function SharedFiles({ params }: { params: Promise<{ token:
       const no = meeting
         ? [...published].sort((a, b) => a.date.localeCompare(b.date)).findIndex((m) => m.id === meeting.id) + 1
         : 0;
+      // 打ち合わせ外の資料は日ごとに分かれるので、見出しにも日付を出す。
+      // 「追加の資料」が同じ名前で並ぶと、どれが新しいのか分からなくなる
       groups.set(key, {
         key,
         label: meeting ? `第${no}回 打ち合わせ` : '追加の資料',
-        sub: formatDate(meeting ? meeting.date : f.uploadedAt.slice(0, 10)),
+        sub: formatDate(meeting ? meeting.date : f.uploadedAt.slice(0, 10)) + (meeting ? '' : ' に追加'),
         date: meeting ? meeting.date : f.uploadedAt.slice(0, 10),
         meetingId: meeting?.id,
         files: [],
@@ -59,7 +61,9 @@ export default async function SharedFiles({ params }: { params: Promise<{ token:
   /** 質問の宛先。回に紐づかない資料は、最新の回にぶら下げる */
   const latestMeetingId = published.sort((a, b) => b.date.localeCompare(a.date))[0]?.id;
 
-  const card = 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm';
+  // 画像を枠いっぱいに出すので、余白は figcaption の側で持つ。
+  // 余白ありの card に p-0 を重ねると、指定の順ではなくCSSの並び順で決まって効かない
+  const tile = 'overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm';
 
   return (
     <>
@@ -87,7 +91,7 @@ export default async function SharedFiles({ params }: { params: Promise<{ token:
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {g.files.map((f) => (
-              <figure key={f.stored} className={`${card} p-0`}>
+              <figure key={f.stored} className={`flex flex-col ${tile}`}>
                 {/* 画像以外（PDF・Excel）は開くだけにする。画像として描けないため */}
                 {!f.mime.startsWith('image/') ? (
                   <a
@@ -106,21 +110,24 @@ export default async function SharedFiles({ params }: { params: Promise<{ token:
                     className="h-40 w-full rounded-t-2xl object-cover"
                   />
                 )}
-                <figcaption className="p-4">
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                {/* 質問ボタンをカードの下端に揃える。写真の説明の長さで位置がずれないように */}
+                <figcaption className="flex flex-1 flex-col p-4">
+                  <span className="self-start rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
                     {f.kind}
                   </span>
                   {f.caption && (
                     <p className="mt-2 text-[13px] leading-relaxed text-slate-700">{f.caption}</p>
                   )}
                   {(g.meetingId || latestMeetingId) && (
-                    <FeedbackForm
-                      token={token}
-                      meetingId={(g.meetingId ?? latestMeetingId) as string}
-                      sentCount={0}
-                      variant="file"
-                      about={f.caption || f.original}
-                    />
+                    <div className="mt-auto pt-3">
+                      <FeedbackForm
+                        token={token}
+                        meetingId={(g.meetingId ?? latestMeetingId) as string}
+                        sentCount={0}
+                        variant="file"
+                        about={f.caption || f.original}
+                      />
+                    </div>
                   )}
                 </figcaption>
               </figure>
