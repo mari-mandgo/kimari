@@ -105,6 +105,18 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
     thumb?: string;
   };
 
+  /** 上に並べる写真カード。古い順に 01,02… と振る */
+  const story = [...meetings]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((m, i, arr) => ({
+      id: m.id,
+      date: m.date,
+      no: String(i + 1).padStart(2, '0'),
+      count: i + 1,
+      summary: m.summary,
+      photo: photosFor(m.id, i === arr.length - 1)[0] ?? null,
+    }));
+
   const byKind = (kind: string) => files.filter((f) => f.kind === kind);
   const latestOf = (list: typeof files) =>
     [...list].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0] ?? null;
@@ -177,7 +189,9 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
         className="mx-auto grid w-full max-w-[1320px] gap-6 px-5 py-6 lg:grid-cols-[300px_minmax(0,1fr)]"
       >
         {/* ── 左：変わらない情報 ───────────────────────── */}
-        <aside className="space-y-4 lg:sticky lg:top-[64px] lg:self-start">
+        {/* 左は固定するが、中身が画面より高いときは左だけで縦に流す。
+            そうしないと、右を一番下まで送らないと相談窓口に届かない */}
+        <aside className="space-y-4 lg:sticky lg:top-[64px] lg:max-h-[calc(100vh-80px)] lg:self-start lg:overflow-y-auto lg:pr-1">
           {/*
             左上は現場の写真ではなく、このページ自体の見出し画像を置く。
             右のヒーローと同じ写真を並べても情報が増えないため。
@@ -301,8 +315,9 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
               // eslint-disable-next-line @next/next/no-img-element
               <img src={heroSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
             )}
-            {/* 文字が乗る左側だけ落とし、右へ抜けるにつれて写真を活かす */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-black/5" />
+            {/* 文字が乗る左側だけ落とし、右へ抜けるにつれて写真を活かす。
+                節目の文字は影で読ませているので、幕はここまで薄くできる */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-black/15 to-transparent" />
 
             <div className="relative grid gap-6 p-5 sm:p-9 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
               <div className="min-w-0 text-white">
@@ -443,10 +458,48 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
             </section>
           )}
 
-          {/* これまでの歩み */}
-          <section id="story">
+          {/* プロジェクトの歩み。写真で一目で追えるようにする。
+              下の時系列は読むもの、こちらは眺めるもの */}
+          {story.length > 0 && (
+            <section id="story">
+              <h2 className="mb-3 text-[19px] font-bold">プロジェクトの歩み</h2>
+              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+                {story.map((s) => (
+                  <a
+                    key={s.id}
+                    href={`#m-${s.id}`}
+                    className="w-[220px] shrink-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+                  >
+                    <div className="flex items-baseline gap-2 px-4 pt-3.5">
+                      <span className="text-[15px] font-bold text-slate-400">{s.no}</span>
+                      <span className="text-[14px] font-bold">第{s.count}回 打ち合わせ</span>
+                    </div>
+                    <p className="px-4 pb-2 text-[12px] text-slate-400">{formatShort(s.date)}</p>
+                    {s.photo ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={`/api/share/${token}/files/${s.photo.stored}`}
+                        alt={s.photo.caption || ''}
+                        className="h-[130px] w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-[130px] w-full items-center justify-center bg-slate-100 text-[12px] text-slate-400">
+                        写真はまだありません
+                      </div>
+                    )}
+                    <p className="line-clamp-3 p-4 text-[12px] leading-relaxed text-slate-600">
+                      {s.photo?.caption || s.summary}
+                    </p>
+                  </a>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* 打ち合わせの記録 */}
+          <section id="log">
             <h2 className="mb-4 text-[19px] font-bold">
-              これまでの歩み{total > 0 && `（${total}回）`}
+              打ち合わせの記録{total > 0 && `（${total}回）`}
             </h2>
 
             {total === 0 && (

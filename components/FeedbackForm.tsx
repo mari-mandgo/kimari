@@ -62,9 +62,23 @@ export default function FeedbackForm({
       {!open ? (
         <button
           onClick={() => setOpen(true)}
-          className="min-h-[44px] w-full rounded-xl border border-slate-300 bg-white text-[14px] font-bold text-slate-700"
+          className={`flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl text-[14px] font-bold ${
+            // 相談窓口は見つけてもらえないと意味がないので、こちらだけ目立たせる
+            isGeneral
+              ? 'bg-slate-900 text-white'
+              : 'border border-slate-300 bg-white text-slate-700'
+          }`}
         >
-          {isGeneral ? 'ご相談はこちらから' : 'この回について伝える'}
+          {isGeneral && (
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden>
+              <path
+                d="M4 6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5v7a2.5 2.5 0 0 1-2.5 2.5H10l-4 3.5V16H6.5A2.5 2.5 0 0 1 4 13.5z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+          {isGeneral ? 'メッセージを送る' : 'この回について伝える'}
           {sentCount > 0 && !isGeneral && (
             <span className="ml-2 text-[12px] font-normal text-slate-400">
               送信済み {sentCount}件
