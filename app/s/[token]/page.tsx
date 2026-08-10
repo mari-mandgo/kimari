@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { notFound } from 'next/navigation';
 import { findByShareToken } from '@/lib/store';
+import { listUsers } from '@/lib/auth';
 import { PHASE_GROUPS, groupOfWeek, progressOfWeek, phaseByWeek } from '@/lib/phases';
 import type { Item } from '@/app/api/analyze/route';
 import FeedbackForm from '@/components/FeedbackForm';
@@ -56,7 +57,19 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
       : null;
 
   const property = project.property;
-  const members = project.members ?? [];
+
+  // メンバーの顔写真は、現場に個別登録したものを優先する。
+  // 無ければ、この現場に参加している登録ユーザーから同名の人を探して使う。
+  // すでにアカウントに写真があるのに、現場ごとに入れ直させたくないため。
+  const accounts = listUsers().filter((u) =>
+    [project.ownerId, ...(project.memberUserIds ?? [])].includes(u.id)
+  );
+  const norm = (s: string) => s.replace(/\s/g, '');
+  const members = (project.members ?? []).map((m) => {
+    // 同名のアカウントが複数あることがあるので、写真を持っているほうを優先する
+    const same = accounts.filter((u) => norm(u.name) === norm(m.name));
+    return { ...m, avatar: m.avatar ?? same.find((u) => u.avatar)?.avatar };
+  });
 
   const week = project.phaseWeek ?? null;
   const phase = phaseByWeek(week ?? undefined);
@@ -68,6 +81,73 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   /** 打ち合わせに紐づく写真。無指定の写真は最新の回に出す */
   const photosFor = (meetingId: string, isLatest: boolean) =>
     photos.filter((f) => (f.meetingId ? f.meetingId === meetingId : isLatest));
+
+  /**
+   * 最新のアップデート。打ち合わせ記録と、資料の種別ごとの更新を1本の時系列に混ぜる。
+   * 施主にとっては「何が新しくなったか」が関心事で、それが打ち合わせか図面かは後の話。
+   */
+  type Update = {
+    kind: string;
+    at: string;
+    title: string;
+    body: string;
+    href: string;
+    action: string;
+    thumb?: string;
+  };
+
+  const byKind = (kind: string) => files.filter((f) => f.kind === kind);
+  const latestOf = (list: typeof files) =>
+    [...list].sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt))[0] ?? null;
+
+  const updates: Update[] = [
+    // 打ち合わせで枠を埋めきらない。図面・写真・見積の更新も見えるようにする
+    ...meetings.slice(0, 2).map((m, idx) => ({
+      kind: '打ち合わせ記録',
+      at: m.date,
+      title: `第${total - idx}回 打ち合わせ`,
+      body:
+        m.summary ||
+        `決定 ${pick(m.items, 'decision_no_cost').length}件・追加のお見積り ${pick(m.items, 'cost_impact').length}件`,
+      href: `#m-${m.id}`,
+      action: '内容を確認',
+      thumb: photosFor(m.id, idx === 0)[0]
+        ? `/api/share/${token}/files/${photosFor(m.id, idx === 0)[0].stored}`
+        : undefined,
+    })),
+    ...(['図面', 'パース', '見積', '写真'] as const).flatMap<Update>((kind) => {
+      const list = byKind(kind);
+      const latest = latestOf(list);
+      if (!latest) return [];
+      const label =
+          kind === '図面'
+            ? '図面更新'
+            : kind === 'パース'
+              ? 'パース更新'
+              : kind === '見積'
+                ? 'お見積り更新'
+                : '現場レポート';
+      return [
+        {
+          kind: label,
+          at: latest.uploadedAt.slice(0, 10),
+          title:
+            kind === '写真'
+              ? '現場の様子を追加しました'
+              : `${kind}を更新しました（${list.length}件）`,
+          body: latest.caption || `最新の${kind}をご覧いただけます。`,
+          href: '#files',
+          action: kind === '写真' ? '写真を見る' : `${kind}を確認`,
+          thumb:
+            latest.mime === 'application/pdf'
+              ? undefined
+              : `/api/share/${token}/files/${latest.stored}`,
+        },
+      ];
+    }),
+  ]
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 4);
 
   const card = 'rounded-2xl border border-slate-200 bg-white p-5 shadow-sm';
   const heading = 'text-[12px] font-bold tracking-[0.15em] text-slate-400';
@@ -164,9 +244,18 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
               <ul className="mt-3 space-y-2.5">
                 {members.map((m, i) => (
                   <li key={i} className="flex items-center gap-2.5">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[12px] font-bold text-slate-500">
-                      {m.name.slice(0, 1)}
-                    </span>
+                    {m.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={m.avatar}
+                        alt=""
+                        className="h-8 w-8 shrink-0 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[12px] font-bold text-slate-500">
+                        {m.name.slice(0, 1)}
+                      </span>
+                    )}
                     <span className="text-[14px] font-bold">{m.name}</span>
                     <span className="text-[12px] text-slate-400">{m.role}</span>
                   </li>
@@ -270,48 +359,36 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
           </section>
 
           {/* 最新のアップデート */}
-          {total > 0 && (
+          {updates.length > 0 && (
             <section id="updates">
               <h2 className="mb-3 text-[19px] font-bold">最新のアップデート</h2>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {meetings.slice(0, 3).map((m, idx) => {
-                  const no = total - idx;
-                  const costs = pick(m.items, 'cost_impact');
-                  const decided = pick(m.items, 'decision_no_cost');
-                  return (
-                    <article key={m.id} className={card}>
-                      <p className="text-[11px] font-bold text-slate-400">打ち合わせ記録</p>
-                      <p className="text-[11px] text-slate-400">{formatShort(m.date)}</p>
-                      <h3 className="mt-2 text-[15px] font-bold">第{no}回 打ち合わせ</h3>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {updates.map((u, i) => (
+                  <article key={i} className={`${card} flex gap-3`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-bold text-slate-400">{u.kind}</p>
+                      <p className="text-[11px] text-slate-400">{formatShort(u.at)}</p>
+                      <h3 className="mt-2 text-[15px] font-bold leading-snug">{u.title}</h3>
                       <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed text-slate-600">
-                        {m.summary || `決定 ${decided.length}件・追加のお見積り ${costs.length}件`}
+                        {u.body}
                       </p>
                       <a
-                        href={`#m-${m.id}`}
+                        href={u.href}
                         className="mt-3 inline-block rounded-lg border border-slate-300 px-3 py-1.5 text-[12px] font-bold"
                       >
-                        内容を確認
+                        {u.action}
                       </a>
-                    </article>
-                  );
-                })}
-                {files.length > 0 && (
-                  <article className={card}>
-                    <p className="text-[11px] font-bold text-slate-400">資料・図面</p>
-                    <h3 className="mt-2 text-[15px] font-bold">
-                      {files.length}件の資料があります
-                    </h3>
-                    <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
-                      図面・パース・現場の写真をご覧いただけます。
-                    </p>
-                    <a
-                      href="#files"
-                      className="mt-3 inline-block rounded-lg border border-slate-300 px-3 py-1.5 text-[12px] font-bold"
-                    >
-                      資料を見る
-                    </a>
+                    </div>
+                    {u.thumb && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={u.thumb}
+                        alt=""
+                        className="h-[68px] w-[68px] shrink-0 self-start rounded-lg object-cover"
+                      />
+                    )}
                   </article>
-                )}
+                ))}
               </div>
             </section>
           )}

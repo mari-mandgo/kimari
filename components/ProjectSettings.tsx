@@ -86,6 +86,36 @@ export default function ProjectSettings({ project }: { project: Project }) {
             <div className="space-y-2">
               {members.map((m, i) => (
                 <div key={i} className="flex gap-2">
+                  {/* 顔写真。施主ページに出る。登録ユーザーなら未設定でもアカウントの写真が使われる */}
+                  <label
+                    className="relative h-[42px] w-[42px] shrink-0 cursor-pointer overflow-hidden rounded-full border border-slate-300 bg-slate-50"
+                    title="顔写真を選ぶ"
+                  >
+                    {m.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={m.avatar} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-[11px] text-slate-400">
+                        写真
+                      </span>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="absolute inset-0 cursor-pointer opacity-0"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          const next = [...members];
+                          next[i] = { ...m, avatar: String(reader.result) };
+                          setMembers(next);
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </label>
                   <input
                     value={m.name}
                     onChange={(e) => {
