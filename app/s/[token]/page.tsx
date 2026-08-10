@@ -50,11 +50,12 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   // 表紙は明示的に選ばれた写真だけを使う。現場写真は縦横も内容もまちまちで、
   // 自動で選ぶと表紙として成立しないため。未選択なら全現場共通の画像を出す。
   const hero = project.heroFileId ? (photos.find((f) => f.id === project.heroFileId) ?? null) : null;
-  const heroSrc = hero
-    ? `/api/share/${token}/files/${hero.stored}`
-    : fs.existsSync(path.join(process.cwd(), 'public', 'hero-default.jpg'))
-      ? '/hero-default.jpg'
-      : null;
+  const publicFile = (name: string) =>
+    fs.existsSync(path.join(process.cwd(), 'public', name)) ? `/${name}` : null;
+
+  const heroSrc = hero ? `/api/share/${token}/files/${hero.stored}` : publicFile('hero-default.jpg');
+  /** 左上に置くこのページ自体の見出し画像。現場によらず共通 */
+  const storySrc = publicFile('renovation-story.png');
 
   const property = project.property;
 
@@ -157,7 +158,8 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
       {/* 上部の帯 */}
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-[#FAF9F7]/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-[1320px] items-center gap-4 px-5 py-3.5">
-          <span className="text-[17px] font-bold tracking-tight">Renovation Story</span>
+          {/* 施主が毎回開くページなので、ここにKIMARIの名前を出す */}
+          <Logo size="md" />
           <span className="hidden truncate text-[13px] text-slate-500 sm:block">{project.name}</span>
           <nav className="ml-auto hidden gap-6 text-[13px] text-slate-600 md:flex">
             <a href="#top" className="font-bold text-slate-900">
@@ -177,10 +179,14 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
       >
         {/* ── 左：変わらない情報 ───────────────────────── */}
         <aside className="space-y-4 lg:sticky lg:top-[64px] lg:self-start">
-          {heroSrc && (
+          {/*
+            左上は現場の写真ではなく、このページ自体の見出し画像を置く。
+            右のヒーローと同じ写真を並べても情報が増えないため。
+          */}
+          {storySrc && (
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={heroSrc} alt="" className="h-[150px] w-full object-cover" />
+              <img src={storySrc} alt="Renovation Story" className="h-[150px] w-full object-cover" />
             </div>
           )}
 
