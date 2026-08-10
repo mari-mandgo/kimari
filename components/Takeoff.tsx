@@ -219,7 +219,7 @@ export default function Takeoff({
         金額はAIが出しません（単価は会社ごと・時期ごとに違い、変更工事の見積は書面で提示する必要があるため）。
       </p>
 
-      <div className="mt-3 overflow-x-auto rounded-xl border border-slate-200">
+      <div className="scroll-clean mt-3 overflow-x-auto rounded-xl border border-slate-200">
         <table className="w-full min-w-[540px] text-left text-[13px]">
           <thead className="bg-slate-50 text-[12px] text-slate-500">
             <tr>

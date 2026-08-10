@@ -230,7 +230,7 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
         {/* 左：どこに何があるかを固定する。縦に長い1枚ページだと迷うため */}
         {/* min-w-0 が無いと、メニューが列の幅を押し広げて横スクロールが出る */}
         <nav className="sticky top-[52px] z-10 -mx-5 min-w-0 bg-slate-100/95 px-5 py-2 backdrop-blur lg:top-[60px] lg:mx-0 lg:self-start lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
-          <ul className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+          <ul className="scroll-clean flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
             {TABS.map((t) => (
               <li key={t.key} className="shrink-0">
                 <button

@@ -42,6 +42,20 @@ button:not(:disabled):active {
 }
 
 /*
+ * スクロールバーを出さずに、スクロールはできるようにする。
+ * 横に流れるカード列や、左カラムだけを流す箇所で使う。
+ * 常時出る細いバーは、画面の端に線が増えるだけで意味を持たないため。
+ * 見切れた中身そのものが「まだ続く」という合図になる。
+ */
+.scroll-clean {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* 旧Edge */
+}
+.scroll-clean::-webkit-scrollbar {
+  display: none;
+}
+
+/*
  * 印刷。見積書をそのまま紙とPDFに出すため。
  * 操作用の部品（.no-print）は落とし、入力欄は枠を消して文字だけ残す。
  */

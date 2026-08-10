@@ -71,7 +71,7 @@ export default function ContractScope({ project }: { project: Project }) {
           </div>
 
           {open && (
-            <div className="mt-3 max-h-[320px] overflow-y-auto rounded-xl border border-slate-200 p-4">
+            <div className="scroll-clean mt-3 max-h-[320px] overflow-y-auto rounded-xl border border-slate-200 p-4">
               <ul className="space-y-1">
                 {scope.included.map((x, i) => (
                   <li key={i} className="text-[13px]">

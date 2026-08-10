@@ -191,17 +191,22 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
         {/* ── 左：変わらない情報 ───────────────────────── */}
         {/* 左は固定するが、中身が画面より高いときは左だけで縦に流す。
             そうしないと、右を一番下まで送らないと相談窓口に届かない */}
-        <aside className="space-y-4 lg:sticky lg:top-[64px] lg:max-h-[calc(100vh-80px)] lg:self-start lg:overflow-y-auto lg:pr-1">
+        <aside className="scroll-clean space-y-4 lg:sticky lg:top-[64px] lg:max-h-[calc(100vh-80px)] lg:self-start lg:overflow-y-auto">
           {/*
             左上は現場の写真ではなく、このページ自体の見出し画像を置く。
             右のヒーローと同じ写真を並べても情報が増えないため。
           */}
           {storySrc && (
-            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-              {/* 高さを固定すると、幅の広いスマホで上下が切れて文字が消える。
-                  画像の比率のまま出す */}
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {/* 高さを固定すると、幅の広いスマホで上下が切れる。画像の比率のまま出す */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={storySrc} alt="Renovation Story" className="block w-full" />
+              <img src={storySrc} alt="" className="block w-full" />
+              {/* 文字は画像に焼き込まず、ここで重ねる。
+                  画面幅で大きさが変わり、文言を変えても画像を作り直さずに済む */}
+              <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/65 via-black/15 to-transparent p-4">
+                <p className="text-[9px] font-bold tracking-[0.25em] text-white/75">PROJECT</p>
+                <p className="text-[17px] font-bold leading-tight text-white">Renovation Story</p>
+              </div>
             </div>
           )}
 
@@ -334,7 +339,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
               </div>
 
               {/* 5つの節目。狭い画面では中で横に流す（ページ全体を広げない） */}
-              <ol className="-mx-1 flex min-w-0 items-start gap-1 overflow-x-auto px-1 pb-1 sm:gap-2 lg:overflow-visible lg:pb-0">
+              <ol className="scroll-clean -mx-1 flex min-w-0 items-start gap-1 overflow-x-auto px-1 pb-1 sm:gap-2 lg:overflow-visible lg:pb-0">
                 {PHASE_GROUPS.map((g, i) => {
                   const done = week !== null && Math.max(...g.weeks) < week;
                   const now = currentGroup?.no === g.no;
@@ -463,7 +468,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
           {story.length > 0 && (
             <section id="story">
               <h2 className="mb-3 text-[19px] font-bold">プロジェクトの歩み</h2>
-              <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+              <div className="scroll-clean -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
                 {story.map((s) => (
                   <a
                     key={s.id}
