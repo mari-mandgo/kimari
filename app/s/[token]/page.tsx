@@ -244,7 +244,9 @@ export default async function ShareHome({ params }: { params: Promise<{ token: s
           回数で増やさず最初から6枚出す。全体像が見えているほうが先を見通せる */}
       <section id="story" className="scroll-mt-24">
         <h2 className="mb-3 text-[19px] font-bold">プロジェクトの歩み</h2>
-        <div className="scroll-clean -mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+        {/* 横に流すと、右の2枚が隠れて「これから何があるか」が伝わらない。
+            6枚とも一度に見えるように折り返す */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {STORY_STEPS.map((s, i) => {
             const next = STORY_STEPS[i + 1];
             const reached = week !== null && week >= s.fromWeek;
@@ -254,7 +256,7 @@ export default async function ShareHome({ params }: { params: Promise<{ token: s
             return (
               <div
                 key={s.no}
-                className={`w-[220px] shrink-0 overflow-hidden rounded-2xl border bg-white shadow-sm transition ${
+                className={`overflow-hidden rounded-2xl border bg-white shadow-sm transition ${
                   now ? 'border-slate-900' : 'border-slate-200'
                 } ${reached ? '' : 'opacity-45 grayscale'}`}
               >
