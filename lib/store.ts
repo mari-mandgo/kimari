@@ -22,6 +22,13 @@ export type Feedback = {
   /** 名乗ってもらう。空でも送れる */
   name: string;
   body: string;
+  /** 何についての連絡か。資料からの質問なら、その資料の名前 */
+  about?: string;
+  /**
+   * 施主が添えたファイル。現場のファイル置き場に入り、id で結びつける。
+   * 「ここが気になる」を言葉だけで伝えるのは難しいので、写真を送れるようにする。
+   */
+  fileIds?: string[];
   createdAt: string;
   read: boolean;
 };

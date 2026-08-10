@@ -9,6 +9,10 @@ type Row = {
   id: string;
   name: string;
   body: string;
+  /** 何についての連絡か。資料からの質問なら、その資料の名前 */
+  about?: string;
+  /** 施主が添えたファイル。現場のファイル置き場に入っている */
+  fileIds?: string[];
   createdAt: string;
   read: boolean;
 };
@@ -62,7 +66,41 @@ export default function FeedbackInbox({ project }: { project: Project }) {
               <span className="font-bold text-slate-700">{r.name || 'お客様'}</span>
               <span>{r.meetingDate} の打ち合わせについて</span>
             </div>
+            {r.about && (
+              <p className="mt-1.5 rounded-lg bg-white px-3 py-1.5 text-[12px] text-slate-600">
+                <span className="font-bold">対象：</span>
+                {r.about}
+              </p>
+            )}
             <p className="mt-2 whitespace-pre-wrap text-[15px] leading-[1.9]">{r.body}</p>
+            {/* 施主が送ってきた写真。言葉だけより早く伝わるので、その場で見せる */}
+            {r.fileIds && r.fileIds.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {r.fileIds.map((id) => {
+                  const f = (project.files ?? []).find((x) => x.id === id);
+                  if (!f) return null;
+                  return f.mime.startsWith('image/') ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={id}
+                      src={`/api/projects/${project.id}/files/${f.stored}`}
+                      alt={f.original}
+                      className="h-24 w-24 rounded-lg object-cover"
+                    />
+                  ) : (
+                    <a
+                      key={id}
+                      href={`/api/projects/${project.id}/files/${f.stored}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex h-24 w-24 items-center justify-center rounded-lg bg-slate-100 p-2 text-center text-[11px] font-bold text-slate-600"
+                    >
+                      ファイルを開く
+                    </a>
+                  );
+                })}
+              </div>
+            )}
             {!r.read && (
               <button
                 onClick={() => markRead(r.id)}
