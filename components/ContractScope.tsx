@@ -47,9 +47,10 @@ export default function ContractScope({ project }: { project: Project }) {
 
   return (
     <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <h2 className="text-[15px] font-bold">当初見積書</h2>
+      <h2 className="text-[15px] font-bold">当初見積書の読み取り</h2>
       <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
-        読み込むと、<b>この契約に何が含まれているか</b>が分かります。
+        上で<b>種別「見積」としてアップロードしたExcel</b>を読むと、
+        <b>この契約に何が含まれているか</b>が分かります。
         拾い出しはそれを避けて、追加になる分だけを出すようになります。
       </p>
 

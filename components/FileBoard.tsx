@@ -13,7 +13,6 @@ export default function FileBoard({ project }: { project: Project }) {
   const [caption, setCaption] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [open, setOpen] = useState(false);
 
   async function upload(list: FileList | null) {
     if (!list || list.length === 0) return;
@@ -56,19 +55,19 @@ export default function FileBoard({ project }: { project: Project }) {
 
   return (
     <section className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
-      >
-        <span>
-          <span className="text-[15px] font-bold">資料・図面・写真</span>
-          <span className="ml-2 text-[13px] text-slate-500">{files.length}件</span>
-        </span>
-        <span className="text-[13px] font-bold text-slate-400">{open ? '閉じる' : '開く'}</span>
-      </button>
+      {/* 独立したページなので、開く操作を挟まず最初から全部出す */}
+      <div className="border-b border-slate-100 px-5 py-4">
+        <h2 className="text-[15px] font-bold">
+          資料・図面・写真
+          <span className="ml-2 text-[13px] font-normal text-slate-500">{files.length}件</span>
+        </h2>
+        <p className="mt-0.5 text-[12px] text-slate-500">
+          種別を選んでから追加してください。施主のページにも並びます
+        </p>
+      </div>
 
-      {open && (
-        <div className="border-t border-slate-100 px-5 py-5">
+      {(
+        <div className="px-5 py-5">
           <div className="flex flex-wrap gap-2">
             {FILE_KINDS.map((k) => (
               <button

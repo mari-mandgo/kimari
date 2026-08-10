@@ -396,15 +396,16 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
           </>
         )}
 
-        {section === 'info' && (
+        {section === 'info' && <ProjectSettings project={project} />}
+
+        {section === 'files' && (
           <>
-            <ProjectSettings project={project} />
-            {/* 当初見積書を読むと、拾い出しの差分判定が推測でなく事実にもとづく */}
+            <FileBoard project={project} />
+            {/* 見積書はここでアップロードするので、読み取りも同じ場所に置く。
+                二重に管理させない */}
             <ContractScope project={project} />
           </>
         )}
-
-        {section === 'files' && <FileBoard project={project} />}
 
         {section === 'estimates' && (
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

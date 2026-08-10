@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Project, PropertyInfo, Member, Stage } from '@/lib/store';
+import type { Project, PropertyInfo, Member } from '@/lib/store';
+import { PHASES } from '@/lib/phases';
 
 const ROLES = ['施主', '設計担当', 'コーディネーター', '施工管理', '職人'];
 
@@ -10,12 +11,12 @@ const ROLES = ['施主', '設計担当', 'コーディネーター', '施工管�
  * 打ち合わせの記録からは取れない情報なので、ここで持つ。
  */
 export default function ProjectSettings({ project }: { project: Project }) {
-  const [open, setOpen] = useState(false);
   const [property, setProperty] = useState<PropertyInfo>(
     project.property ?? { address: '', area: '', structure: '', age: '', completionDate: '' }
   );
   const [members, setMembers] = useState<Member[]>(project.members ?? []);
-  const [stages, setStages] = useState<Stage[]>(project.stages ?? []);
+  /** 工程は打ち合わせを記録すると自動で進むが、ずれたときに直せるようにしておく */
+  const [phaseWeek, setPhaseWeek] = useState<number | ''>(project.phaseWeek ?? '');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -25,7 +26,11 @@ export default function ProjectSettings({ project }: { project: Project }) {
       await fetch(`/api/projects/${project.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ property, members, stages }),
+        body: JSON.stringify({
+          property,
+          members,
+          ...(phaseWeek === '' ? {} : { phaseWeek }),
+        }),
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -34,26 +39,17 @@ export default function ProjectSettings({ project }: { project: Project }) {
     }
   }
 
-  const currentStage = stages.filter((s) => s.done).length;
-
   return (
     <section className="mb-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
-      >
-        <span>
-          <span className="text-[15px] font-bold">現場の情報</span>
-          <span className="ml-2 text-[13px] text-slate-500">
-            {stages.length > 0 && `${currentStage}/${stages.length} 段階`}
-            {members.length > 0 && ` ・ メンバー${members.length}名`}
-          </span>
-        </span>
-        <span className="text-[13px] font-bold text-slate-400">{open ? '閉じる' : '編集'}</span>
-      </button>
+      <div className="border-b border-slate-100 px-5 py-4">
+        <h2 className="text-[15px] font-bold">現場の情報</h2>
+        <p className="mt-0.5 text-[12px] text-slate-500">
+          ここで入れた内容が、施主のページにそのまま出ます
+        </p>
+      </div>
 
-      {open && (
-        <div className="space-y-6 border-t border-slate-100 px-5 py-5">
+      {(
+        <div className="space-y-6 px-5 py-5">
           {/* 物件情報 */}
           <div>
             <h3 className="mb-3 text-[13px] font-bold text-slate-700">物件情報</h3>
@@ -156,47 +152,28 @@ export default function ProjectSettings({ project }: { project: Project }) {
             </button>
           </div>
 
-          {/* 進行段階 */}
+          {/* 進行状況。手でチェックを入れる段階表はやめた。
+              打ち合わせを記録するときに選んだ工程が、そのまま現場の進行になる。
+              同じことを2か所で管理すると必ずずれるため、ここは直すためだけの場所 */}
           <div>
-            <h3 className="mb-1 text-[13px] font-bold text-slate-700">進行状況</h3>
-            <p className="mb-3 text-[12px] text-slate-500">
-              済んだ段階にチェックを入れると、施主のページに「いま、ここです」が出ます
+            <h3 className="mb-1 text-[13px] font-bold text-slate-700">いまの工程</h3>
+            <p className="mb-3 text-[12px] leading-relaxed text-slate-500">
+              打ち合わせを記録すると自動で進みます。ずれているときだけ直してください。
+              施主のページの進行率は、ここから出ています。
             </p>
-            <div className="space-y-2">
-              {stages.map((s, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={s.done}
-                    onChange={(e) => {
-                      const next = [...stages];
-                      next[i] = { ...s, done: e.target.checked };
-                      setStages(next);
-                    }}
-                    className="h-5 w-5 shrink-0"
-                  />
-                  <input
-                    value={s.label}
-                    onChange={(e) => {
-                      const next = [...stages];
-                      next[i] = { ...s, label: e.target.value };
-                      setStages(next);
-                    }}
-                    className="flex-1 rounded-xl border border-slate-300 px-3 py-2.5 text-[14px]"
-                  />
-                  <input
-                    type="date"
-                    value={s.date}
-                    onChange={(e) => {
-                      const next = [...stages];
-                      next[i] = { ...s, date: e.target.value };
-                      setStages(next);
-                    }}
-                    className="rounded-xl border border-slate-300 px-2 py-2.5 text-[13px]"
-                  />
-                </div>
+            <select
+              value={phaseWeek}
+              onChange={(e) => setPhaseWeek(e.target.value === '' ? '' : Number(e.target.value))}
+              className="w-full rounded-xl border border-slate-300 px-3 py-2.5 text-[14px]"
+            >
+              <option value="">まだ設定していません</option>
+              {PHASES.map((p) => (
+                <option key={p.week} value={p.week}>
+                  {p.week}週目・{p.label}
+                  {p.week === 4 ? '（ここから契約後）' : ''}
+                </option>
               ))}
-            </div>
+            </select>
           </div>
 
           <button
