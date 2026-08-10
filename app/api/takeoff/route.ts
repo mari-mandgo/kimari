@@ -63,9 +63,12 @@ export async function POST(req: Request) {
     const scope = owner ? scopeOf(owner) : '';
 
     // 仕分け済みの項目でも固有名詞が残っていることがあるので、ここでも通す
-    const joined = [title, detail ?? '', reason ?? '', quote ?? '', context].join('\n');
+    // 改行で連結すると、要約や詳細に改行が入ったときに項目がずれる。
+    // 本文に現れない制御文字で区切る（マスク処理はこの文字に触れない）。
+    const SEP = '\x1f';
+    const joined = [title, detail ?? '', reason ?? '', quote ?? '', context].join(SEP);
     const { masked, map } = maskPII(joined, names);
-    const [mTitle, mDetail, mReason, mQuote, mContext] = masked.split('\n');
+    const [mTitle, mDetail, mReason, mQuote, mContext] = masked.split(SEP);
 
     // 自社の補正を足す。使うほど自社の型に寄っていく
     const { data, meta } = await chat({
