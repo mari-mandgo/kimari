@@ -14,6 +14,7 @@ import FileBoard from '@/components/FileBoard';
 import Recorder from '@/components/Recorder';
 import Takeoff from '@/components/Takeoff';
 import MeetingList from '@/components/MeetingList';
+import ContractScope from '@/components/ContractScope';
 import { PHASES } from '@/lib/phases';
 import type { PublicUser } from '@/lib/roles';
 
@@ -272,6 +273,9 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
         <ProjectSettings project={project} />
 
         <FileBoard project={project} />
+
+        {/* 当初見積書を読むと、拾い出しの差分判定が推測でなく事実にもとづく */}
+        <ContractScope project={project} />
 
         {/* 保存済みの打ち合わせ。ここで施主ページへの公開を決める */}
         <MeetingList

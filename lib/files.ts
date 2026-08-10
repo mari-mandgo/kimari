@@ -21,6 +21,9 @@ const ALLOWED = new Set([
   'image/webp',
   'image/heic',
   'application/pdf',
+  // 見積書。中身を読んで「契約に含まれる工事」を取り出すため受け付ける
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
 ]);
 
 export function isAllowed(mime: string): boolean {

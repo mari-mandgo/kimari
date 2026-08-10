@@ -181,6 +181,12 @@ export default function Takeoff({
           {res.phase_reason && (
             <p className="mt-1 text-[12px] leading-relaxed text-slate-300">{res.phase_reason}</p>
           )}
+          {res.usedContract && (
+            <p className="mt-2 border-t border-white/15 pt-2 text-[12px] text-emerald-300">
+              当初見積書「{res.usedContract.fileName}」の{res.usedContract.count}項目と
+              照らして判定しています
+            </p>
+          )}
         </div>
       )}
 

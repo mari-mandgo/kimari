@@ -130,6 +130,19 @@ export type Project = {
   phaseWeek?: number;
   /** 追加見積。打ち合わせの拾い出しから作られる */
   estimates?: Estimate[];
+  /**
+   * 当初見積書から読み取った「契約に含まれる工事」。
+   * これがあると、拾い出しの差分判定が推測でなく事実にもとづくものになる。
+   */
+  contractScope?: {
+    /** 読み取り元のファイル */
+    fileId: string;
+    fileName: string;
+    included: { category: string; name: string }[];
+    excluded: string[];
+    notes: string[];
+    readAt: string;
+  };
   meetings: Meeting[];
   createdAt: string;
   updatedAt: string;

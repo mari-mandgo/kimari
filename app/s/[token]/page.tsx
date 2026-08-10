@@ -142,10 +142,9 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
           body: latest.caption || `最新の${kind}をご覧いただけます。`,
           href: '#files',
           action: kind === '写真' ? '写真を見る' : `${kind}を確認`,
-          thumb:
-            latest.mime === 'application/pdf'
-              ? undefined
-              : `/api/share/${token}/files/${latest.stored}`,
+          thumb: latest.mime.startsWith('image/')
+            ? `/api/share/${token}/files/${latest.stored}`
+            : undefined,
         },
       ];
     }),
@@ -411,14 +410,15 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                 {files.map((f) => (
                   <figure key={f.stored} className="overflow-hidden rounded-xl bg-white shadow-sm">
-                    {f.mime === 'application/pdf' ? (
+                    {/* 画像以外（PDF・Excel）は開くだけにする。画像として描けないため */}
+                    {!f.mime.startsWith('image/') ? (
                       <a
                         href={`/api/share/${token}/files/${f.stored}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex h-32 items-center justify-center bg-slate-100 text-[12px] font-bold text-slate-600"
                       >
-                        PDFを開く
+                        {f.mime === 'application/pdf' ? 'PDFを開く' : 'ファイルを開く'}
                       </a>
                     ) : (
                       <Zoomable

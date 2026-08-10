@@ -37,6 +37,8 @@ export type TakeoffResponse = {
   calls: CallMeta[];
   /** この拾い出しに効いた、自社の補正。取り消せるように中身ごと返す */
   appliedRules: TakeoffRule[];
+  /** 当初見積書を読んで判定したか。推測との違いを画面で示す */
+  usedContract: { fileName: string; count: number } | null;
 };
 
 export async function POST(req: Request) {
@@ -57,10 +59,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'title がありません' }, { status: 400 });
     }
 
+    const project = getProject(String(projectId ?? ''));
+
+    // 当初見積書から読み取った契約範囲。あれば推測でなく事実で判定できる
+    const scope = project?.contractScope;
+    const contractScope = scope
+      ? scope.included.map((x) => `- ${x.category ? `[${x.category}] ` : ''}${x.name}`).join('\n')
+      : '';
+
     // 補正は会社ごと。他社のルールは混ざらない
-    const ownerId = getProject(String(projectId ?? ''))?.ownerId;
+    const ownerId = project?.ownerId;
     const owner = ownerId ? findUserById(ownerId) : null;
-    const scope = owner ? scopeOf(owner) : '';
+    const rulesScope = owner ? scopeOf(owner) : '';
 
     // 仕分け済みの項目でも固有名詞が残っていることがあるので、ここでも通す
     // 改行で連結すると、要約や詳細に改行が入ったときに項目がずれる。
@@ -73,7 +83,7 @@ export async function POST(req: Request) {
     // 自社の補正を足す。使うほど自社の型に寄っていく
     const { data, meta } = await chat({
       task: 'takeoff',
-      system: TAKEOFF_SYSTEM + rulesAsPrompt(scope),
+      system: TAKEOFF_SYSTEM + rulesAsPrompt(rulesScope),
       user: takeoffUser({
         title: mTitle,
         detail: mDetail ?? '',
@@ -81,6 +91,7 @@ export async function POST(req: Request) {
         quote: mQuote,
         context: mContext,
         phaseLabel,
+        contractScope,
       }),
       model,
       json: true,
@@ -115,7 +126,8 @@ export async function POST(req: Request) {
       missing_info: (parsed.missing_info ?? []).map((s) => unmask(String(s), map)),
       cautions: (parsed.cautions ?? []).map((s) => unmask(String(s), map)),
       calls: [meta],
-      appliedRules: listRules(scope),
+      appliedRules: listRules(rulesScope),
+      usedContract: scope ? { fileName: scope.fileName, count: scope.included.length } : null,
     };
 
     return NextResponse.json(body);

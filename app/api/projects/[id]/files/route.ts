@@ -27,7 +27,7 @@ export async function POST(req: Request, { params }: Ctx) {
   }
   if (!isAllowed(file.type)) {
     return NextResponse.json(
-      { error: '画像（JPEG / PNG / WebP / HEIC）とPDFのみ受け付けます' },
+      { error: '画像（JPEG / PNG / WebP / HEIC）・PDF・Excelの見積書のみ受け付けます' },
       { status: 400 }
     );
   }
