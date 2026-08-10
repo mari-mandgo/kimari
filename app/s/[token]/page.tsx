@@ -7,6 +7,7 @@ import { PHASE_GROUPS, groupOfWeek, progressOfWeek, phaseByWeek } from '@/lib/ph
 import type { Item } from '@/app/api/analyze/route';
 import FeedbackForm from '@/components/FeedbackForm';
 import PhaseIcon from '@/components/PhaseIcon';
+import ShareNav from '@/components/ShareNav';
 import Logo from '@/components/Logo';
 import Zoomable from '@/components/Zoomable';
 
@@ -53,12 +54,16 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   // 表紙は明示的に選ばれた写真だけを使う。現場写真は縦横も内容もまちまちで、
   // 自動で選ぶと表紙として成立しないため。未選択なら全現場共通の画像を出す。
   const hero = project.heroFileId ? (photos.find((f) => f.id === project.heroFileId) ?? null) : null;
-  const publicFile = (name: string) =>
-    fs.existsSync(path.join(process.cwd(), 'public', name)) ? `/${name}` : null;
+  /** 拡張子は問わない。差し替えのたびにコードを直さなくてよいように */
+  const publicFile = (...names: string[]) =>
+    names.map((n) => (fs.existsSync(path.join(process.cwd(), 'public', n)) ? `/${n}` : null)).find(Boolean) ??
+    null;
 
-  const heroSrc = hero ? `/api/share/${token}/files/${hero.stored}` : publicFile('hero-default.jpg');
+  const heroSrc = hero
+    ? `/api/share/${token}/files/${hero.stored}`
+    : publicFile('hero-default.jpg', 'hero-default.png');
   /** 左上に置くこのページ自体の見出し画像。現場によらず共通 */
-  const storySrc = publicFile('renovation-story.png');
+  const storySrc = publicFile('renovation-story.jpg', 'renovation-story.png');
 
   const property = project.property;
 
@@ -159,19 +164,11 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
     <main className="min-h-screen bg-[#FAF9F7] text-slate-900">
       {/* 上部の帯 */}
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-[#FAF9F7]/90 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[1320px] items-center gap-4 px-5 py-3.5">
+        <div className="relative mx-auto flex w-full max-w-[1320px] items-center gap-4 px-5 py-3.5">
           {/* 施主が毎回開くページなので、ここにKIMARIの名前を出す */}
           <Logo size="md" />
           <span className="hidden truncate text-[13px] text-slate-500 sm:block">{project.name}</span>
-          <nav className="ml-auto hidden gap-6 text-[13px] text-slate-600 md:flex">
-            <a href="#top" className="font-bold text-slate-900">
-              ホーム
-            </a>
-            <a href="#updates">最新の更新</a>
-            <a href="#files">資料・図面</a>
-            <a href="#story">これまでの歩み</a>
-            <a href="#contact">ご相談</a>
-          </nav>
+          <ShareNav />
         </div>
       </header>
 
@@ -187,8 +184,10 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
           */}
           {storySrc && (
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {/* 高さを固定すると、幅の広いスマホで上下が切れて文字が消える。
+                  画像の比率のまま出す */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={storySrc} alt="Renovation Story" className="h-[150px] w-full object-cover" />
+              <img src={storySrc} alt="Renovation Story" className="block w-full" />
             </div>
           )}
 
@@ -305,12 +304,12 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
             {/* 文字が乗る左側だけ落とし、右へ抜けるにつれて写真を活かす */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-black/5" />
 
-            <div className="relative grid gap-6 p-7 sm:p-9 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-              <div className="text-white">
+            <div className="relative grid gap-6 p-5 sm:p-9 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <div className="min-w-0 text-white">
                 <p className="text-[11px] font-bold tracking-[0.2em] text-white/70">
                   PROJECT STORY
                 </p>
-                <h2 className="mt-2 text-[26px] font-bold leading-snug sm:text-[30px]">
+                <h2 className="mt-2 text-[24px] font-bold leading-snug sm:text-[30px]">
                   一緒につくる、理想の暮らし
                 </h2>
                 <p className="mt-3 max-w-[380px] text-[14px] leading-[1.9] text-white/85">
@@ -319,8 +318,8 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                 </p>
               </div>
 
-              {/* 5つの節目 */}
-              <ol className="flex items-start gap-1 sm:gap-2">
+              {/* 5つの節目。狭い画面では中で横に流す（ページ全体を広げない） */}
+              <ol className="-mx-1 flex min-w-0 items-start gap-1 overflow-x-auto px-1 pb-1 sm:gap-2 lg:overflow-visible lg:pb-0">
                 {PHASE_GROUPS.map((g, i) => {
                   const done = week !== null && Math.max(...g.weeks) < week;
                   const now = currentGroup?.no === g.no;
@@ -332,23 +331,27 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                             now
                               ? 'border-white bg-white text-slate-900'
                               : done
-                                ? 'border-white/70 bg-white/20 text-white'
-                                : 'border-white/30 bg-white/5 text-white/50'
+                                ? 'border-white bg-black/35 text-white'
+                                : 'border-white/60 bg-black/25 text-white/80'
                           }`}
                         >
                           <PhaseIcon icon={g.icon} className="h-5 w-5 sm:h-6 sm:w-6" />
                         </span>
+                        {/* 写真の上なので、薄くすると読めなくなる。
+                            済み・これからは影で沈め、文字自体は白のまま残す */}
                         <p
                           className={`mt-1.5 text-[10px] font-bold ${
-                            now ? 'text-white' : 'text-white/50'
+                            now ? 'text-white' : 'text-white/80'
                           }`}
+                          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}
                         >
                           {g.no}
                         </p>
                         <p
                           className={`text-[10px] leading-tight sm:text-[11px] ${
-                            now ? 'font-bold text-white' : 'text-white/60'
+                            now ? 'font-bold text-white' : 'text-white/90'
                           }`}
+                          style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                         >
                           {g.label}
                         </p>
