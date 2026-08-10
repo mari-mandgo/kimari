@@ -293,7 +293,8 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
               // eslint-disable-next-line @next/next/no-img-element
               <img src={heroSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
             )}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/25" />
+            {/* 文字が乗る左側だけ落とし、右へ抜けるにつれて写真を活かす */}
+            <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/25 to-black/5" />
 
             <div className="relative grid gap-6 p-7 sm:p-9 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
               <div className="text-white">
