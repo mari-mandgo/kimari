@@ -13,6 +13,7 @@ import FeedbackInbox from '@/components/FeedbackInbox';
 import FileBoard from '@/components/FileBoard';
 import Recorder from '@/components/Recorder';
 import Takeoff from '@/components/Takeoff';
+import MeetingList from '@/components/MeetingList';
 import { PHASES } from '@/lib/phases';
 import type { PublicUser } from '@/lib/roles';
 
@@ -271,6 +272,13 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
         <ProjectSettings project={project} />
 
         <FileBoard project={project} />
+
+        {/* 保存済みの打ち合わせ。ここで施主ページへの公開を決める */}
+        <MeetingList
+          projectId={project.id}
+          meetings={project.meetings}
+          shareToken={shareToken ?? undefined}
+        />
 
         <div className="mb-6">
           <Recorder onTranscript={(text) => setTranscript(text)} />

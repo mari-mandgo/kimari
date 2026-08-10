@@ -18,6 +18,12 @@ export type Company = {
   name: string;
   address?: string;
   tel?: string;
+  /**
+   * 会社のロゴ。data URL で持つ。
+   * 見積書に出す。施主へお出しする書面に載るのは自社の名前であるべきなので、
+   * KIMARIのロゴではなくこちらを使う。
+   */
+  logo?: string;
   /** 社員を招くためのコード。現場の招待コードと同じ考え方 */
   inviteCode: string;
   /** 会社を作った人 */
@@ -57,6 +63,19 @@ export function findByInviteCode(code: string): Company | null {
   const norm = code.trim().toUpperCase();
   if (!norm) return null;
   return read().find((c) => c.inviteCode === norm) ?? null;
+}
+
+/** 会社情報の更新。ロゴや住所は後から入れることが多い */
+export function updateCompany(
+  id: string,
+  patch: Partial<Pick<Company, 'name' | 'address' | 'tel' | 'logo'>>
+): Company | null {
+  const list = read();
+  const c = list.find((x) => x.id === id);
+  if (!c) return null;
+  Object.assign(c, patch);
+  write(list);
+  return c;
 }
 
 export function createCompany(input: {

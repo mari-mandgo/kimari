@@ -21,11 +21,19 @@ export default async function EstimatePage({
   const estimate = (project.estimates ?? []).find((e) => e.id === eid);
   if (!estimate) notFound();
 
+  const company = getCompany(me.companyId);
+
   return (
     <EstimateEditor
       projectId={project.id}
       projectName={project.name}
-      companyName={getCompany(me.companyId)?.name}
+      companyName={company?.name}
+      companyLogo={company?.logo}
+      companyAddress={company?.address}
+      companyTel={company?.tel}
+      estimateFiles={(project.files ?? [])
+        .filter((f) => f.kind === '見積')
+        .map((f) => ({ id: f.id, original: f.original }))}
       initial={estimate}
     />
   );

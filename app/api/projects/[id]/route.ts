@@ -31,6 +31,17 @@ export async function PATCH(req: Request, { params }: Ctx) {
   // 打ち合わせを記録するたびに、選ばれた工程で現場の進行を更新する
   if (typeof body.phaseWeek === 'number') project.phaseWeek = body.phaseWeek;
 
+  // 施主ページへの公開・非公開。AIの結果を人が確かめてから出す
+  if (body.publishMeeting && typeof body.publishMeeting.id === 'string') {
+    const m = project.meetings.find((x) => x.id === body.publishMeeting.id);
+    if (m) m.published = Boolean(body.publishMeeting.published);
+  }
+
+  // 打ち合わせの削除。試しに流した分を消せないと施主ページが汚れる
+  if (typeof body.deleteMeeting === 'string') {
+    project.meetings = project.meetings.filter((m) => m.id !== body.deleteMeeting);
+  }
+
   // 施主からの連絡を確認済みにする
   if (body.markFeedbackRead) {
     for (const m of project.meetings) {

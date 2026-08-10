@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@/lib/session';
 import { updateUser, findUserById, listUsers, toPublic } from '@/lib/auth';
-import { createCompany, findByInviteCode, getCompany } from '@/lib/companies';
+import { createCompany, findByInviteCode, getCompany, updateCompany } from '@/lib/companies';
 
 export const runtime = 'nodejs';
 
@@ -48,6 +48,28 @@ export async function POST(req: Request) {
       ownerUserId: me.id,
     });
     updateUser(me.id, { companyId: company.id });
+    return NextResponse.json({ company });
+  }
+
+  if (body.action === 'edit') {
+    if (!me.companyId) {
+      return NextResponse.json({ error: '会社に所属していません' }, { status: 400 });
+    }
+    // 会社の情報を変えられるのは、その会社に属している設計・現場管理だけ
+    if (!['設計', '現場管理'].includes(me.role)) {
+      return NextResponse.json(
+        { error: '会社の情報を変更できるのは、設計・現場管理の方だけです' },
+        { status: 403 }
+      );
+    }
+    const patch: Record<string, string | undefined> = {};
+    for (const key of ['name', 'address', 'tel'] as const) {
+      if (typeof body[key] === 'string') patch[key] = body[key];
+    }
+    // 空文字は「ロゴを外す」。未指定なら今のロゴを残す
+    if (typeof body.logo === 'string') patch.logo = body.logo || undefined;
+
+    const company = updateCompany(me.companyId, patch);
     return NextResponse.json({ company });
   }
 

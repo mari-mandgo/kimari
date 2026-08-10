@@ -78,6 +78,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (body[key] !== undefined) (target[key] as unknown) = body[key];
   }
   if (typeof body.taxRate === 'number') target.taxRate = body.taxRate;
+  if (body.baseAmount === null || typeof body.baseAmount === 'number') {
+    target.baseAmount = body.baseAmount;
+  }
+  if (typeof body.baseFileId === 'string') target.baseFileId = body.baseFileId || undefined;
   if (Array.isArray(body.rows)) target.rows = body.rows;
   target.updatedAt = new Date().toISOString();
 

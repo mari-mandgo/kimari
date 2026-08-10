@@ -23,11 +23,21 @@ export default function EstimateEditor({
   projectId,
   projectName,
   companyName,
+  companyLogo,
+  companyAddress,
+  companyTel,
+  estimateFiles,
   initial,
 }: {
   projectId: string;
   projectName: string;
+  /** 現場に登録された「見積」種別のファイル。当初見積の添付に使う */
+  estimateFiles: { id: string; original: string }[];
+  /** 施主へお出しする書面に載るのは自社の名前。KIMARIのものではない */
   companyName?: string;
+  companyLogo?: string;
+  companyAddress?: string;
+  companyTel?: string;
   initial: Estimate;
 }) {
   const [est, setEst] = useState<Estimate>(initial);
@@ -63,10 +73,16 @@ export default function EstimateEditor({
   const add = est.rows.filter((r) => !r.isDeduction).reduce((s, r) => s + (amount(r) ?? 0), 0);
   const sub = est.rows.filter((r) => r.isDeduction).reduce((s, r) => s + (amount(r) ?? 0), 0);
   const net = add - sub;
-  const tax = Math.floor((net * est.taxRate) / 100);
-  const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
-
   const isDelta = est.template === 'delta';
+
+  // 増減表は「当初金額＋増減」が請負金額になる。他のひな型は増減分だけを見る
+  const base = est.baseAmount ?? null;
+  const taxable = isDelta && base !== null ? base + net : net;
+  const tax = Math.floor((taxable * est.taxRate) / 100);
+  const grandTotal = taxable + tax;
+  const yen = (n: number) => `¥${n.toLocaleString('ja-JP')}`;
+  const baseFileName = estimateFiles.find((f) => f.id === est.baseFileId)?.original;
+
   const hasCover = est.template === 'cover' || isDelta;
 
   const cell = 'border border-slate-300 px-2 py-1.5 text-[13px]';
@@ -152,6 +168,47 @@ export default function EstimateEditor({
             </label>
           </div>
 
+          {/* 増減表は当初金額が無いと成立しない。「変更後いくらか」を出せないため */}
+          {isDelta && (
+            <div className="mt-3 rounded-xl bg-slate-50 p-4">
+              <h2 className="text-[13px] font-bold text-slate-700">当初の請負契約</h2>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-[12px] text-slate-600">当初請負金額（税抜）</span>
+                  <input
+                    type="number"
+                    value={est.baseAmount ?? ''}
+                    onChange={(e) =>
+                      patch({ baseAmount: e.target.value === '' ? null : Number(e.target.value) })
+                    }
+                    placeholder="8500000"
+                    className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-right text-[14px]"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-[12px] text-slate-600">当初見積書（添付）</span>
+                  <select
+                    value={est.baseFileId ?? ''}
+                    onChange={(e) => patch({ baseFileId: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2.5 text-[14px]"
+                  >
+                    <option value="">選択しない</option>
+                    {estimateFiles.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        {f.original}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
+                当初の見積書（Excel・PDF）は、<b>資料・図面・写真から種別「見積」でアップロード</b>
+                すると、ここで選べるようになります。
+                {estimateFiles.length === 0 && ' まだ登録がありません。'}
+              </p>
+            </div>
+          )}
+
           <label className="mt-3 block">
             <span className="text-[13px] font-bold text-slate-600">備考</span>
             <textarea
@@ -227,7 +284,17 @@ export default function EstimateEditor({
 
               <div className="text-right text-[12px] leading-relaxed">
                 <p>{est.issuedOn}</p>
+                {companyLogo && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={companyLogo}
+                    alt=""
+                    className="mt-2 ml-auto max-h-[44px] max-w-[180px] object-contain"
+                  />
+                )}
                 <p className="mt-2 text-[15px] font-bold">{companyName || '　'}</p>
+                {companyAddress && <p className="text-slate-500">{companyAddress}</p>}
+                {companyTel && <p className="text-slate-500">TEL {companyTel}</p>}
                 <p className="mt-0.5 text-slate-500">担当：{est.createdBy}</p>
               </div>
             </div>
@@ -237,7 +304,7 @@ export default function EstimateEditor({
                 <span className="text-[14px] font-bold tracking-widest">
                   {isDelta ? '差引増減額（税込）' : '御見積金額（税込）'}
                 </span>
-                <span className="text-[26px] font-bold">{yen(net + tax)}</span>
+                <span className="text-[26px] font-bold">{yen(grandTotal)}</span>
               </div>
             </div>
           </header>
@@ -335,8 +402,14 @@ export default function EstimateEditor({
         <div className="mt-4 flex justify-end">
           <table className="w-[300px] border-collapse">
             <tbody>
-              {isDelta && (
+              {isDelta ? (
                 <>
+                  <tr>
+                    <td className={`${cell} bg-slate-50`}>当初請負金額</td>
+                    <td className={`${cell} text-right`}>
+                      {base === null ? '—' : yen(base)}
+                    </td>
+                  </tr>
                   <tr>
                     <td className={`${cell} bg-slate-50`}>増額計</td>
                     <td className={`${cell} text-right font-bold`}>{yen(add)}</td>
@@ -345,25 +418,41 @@ export default function EstimateEditor({
                     <td className={`${cell} bg-slate-50`}>減額計</td>
                     <td className={`${cell} text-right font-bold`}>− {yen(sub)}</td>
                   </tr>
+                  <tr>
+                    <td className={`${cell} bg-slate-50`}>差引増減</td>
+                    <td className={`${cell} text-right font-bold`}>
+                      {net >= 0 ? '' : '− '}
+                      {yen(Math.abs(net))}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className={`${cell} bg-slate-50`}>変更後請負金額</td>
+                    <td className={`${cell} text-right font-bold`}>
+                      {base === null ? '—' : yen(base + net)}
+                    </td>
+                  </tr>
                 </>
+              ) : (
+                <tr>
+                  <td className={`${cell} bg-slate-50`}>小計</td>
+                  <td className={`${cell} text-right font-bold`}>{yen(net)}</td>
+                </tr>
               )}
-              <tr>
-                <td className={`${cell} bg-slate-50`}>{isDelta ? '差引' : '小計'}</td>
-                <td className={`${cell} text-right font-bold`}>{yen(net)}</td>
-              </tr>
               <tr>
                 <td className={`${cell} bg-slate-50`}>消費税（{est.taxRate}%）</td>
                 <td className={`${cell} text-right`}>{yen(tax)}</td>
               </tr>
               <tr>
-                <td className={`${cell} bg-slate-900 font-bold text-white`}>合計</td>
-                <td className={`${cell} text-right text-[16px] font-bold`}>{yen(net + tax)}</td>
+                <td className={`${cell} bg-slate-900 font-bold text-white`}>
+                  {isDelta ? '変更後請負金額（税込）' : '合計'}
+                </td>
+                <td className={`${cell} text-right text-[16px] font-bold`}>{yen(grandTotal)}</td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        {(est.note || est.sourceTitle) && (
+        {(est.note || est.sourceTitle || baseFileName) && (
           <section className="mt-6 border-t border-slate-200 pt-4 text-[12px] leading-relaxed text-slate-600">
             <p className="font-bold text-slate-700">備考</p>
             {est.note && <p className="mt-1 whitespace-pre-wrap">{est.note}</p>}
@@ -372,6 +461,7 @@ export default function EstimateEditor({
                 本見積は「{est.sourceTitle}」に関する変更分です。もともとの契約に含まれる工事は含みません。
               </p>
             )}
+            {baseFileName && <p className="mt-1">当初見積書：{baseFileName}</p>}
           </section>
         )}
 

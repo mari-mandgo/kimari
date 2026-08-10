@@ -83,6 +83,47 @@ export default function MyPage({ me }: { me: PublicUser }) {
     reader.readAsDataURL(file);
   }
 
+  /** 会社のロゴ。横長のことが多いので、比率は変えず長辺512pxに収める */
+  function pickLogo(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 512;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return saveCompanyLogo(String(reader.result));
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        // 背景透過のロゴがあるので PNG のまま保存する
+        saveCompanyLogo(canvas.toDataURL('image/png'));
+      };
+      img.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function saveCompanyLogo(logo: string) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/company', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'edit', logo }),
+      });
+      const j = await res.json();
+      if (!res.ok) throw new Error(j.error ?? '保存できませんでした');
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function saveProfile() {
     setBusy(true);
     setError(null);
@@ -255,6 +296,42 @@ export default function MyPage({ me }: { me: PublicUser }) {
 
           {company ? (
             <>
+              {/* 見積書に出るのは自社のロゴであるべき。KIMARIのものではなく */}
+              <div className="mt-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+                <label className="relative flex h-[52px] w-[104px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-slate-300 bg-white">
+                  {company.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={company.logo} alt="" className="max-h-full max-w-full object-contain" />
+                  ) : (
+                    <span className="text-[11px] text-slate-400">ロゴを選ぶ</span>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) pickLogo(f);
+                    }}
+                  />
+                </label>
+                <div className="text-[12px] leading-relaxed text-slate-500">
+                  <p>
+                    <b className="text-slate-700">会社のロゴ</b>
+                    <br />
+                    追加見積書に出ます。横長の画像が収まりよく入ります。
+                  </p>
+                  {company.logo && (
+                    <button
+                      onClick={() => saveCompanyLogo('')}
+                      className="mt-1 text-[12px] text-slate-400 underline"
+                    >
+                      ロゴを外す
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <dl className="mt-3 space-y-2 text-[14px]">
                 <div className="flex gap-3">
                   <dt className="w-20 shrink-0 text-slate-500">会社名</dt>

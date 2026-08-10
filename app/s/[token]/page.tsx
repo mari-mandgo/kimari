@@ -42,7 +42,10 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
   const project = findByShareToken(token);
   if (!project) notFound();
 
-  const meetings = [...project.meetings].sort((a, b) => b.date.localeCompare(a.date));
+  // 公開したものだけを出す。仕分けただけの回や、試しに流した分は施主に見せない
+  const meetings = project.meetings
+    .filter((m) => m.published)
+    .sort((a, b) => b.date.localeCompare(a.date));
   const total = meetings.length;
   const files = project.files ?? [];
   const photos = files.filter((f) => f.mime !== 'application/pdf');

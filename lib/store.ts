@@ -35,6 +35,12 @@ export type Meeting = {
   summary: string;
   /** 共有リンクのトークン。施主・職人はこれで読む */
   shareToken: string;
+  /**
+   * 施主ページに出すかどうか。
+   * 仕分けただけでは出さない。AIの結果を人が確かめてから公開する。
+   * 試しに流したものや、やり直した分が施主に見えてしまうのを防ぐ。
+   */
+  published?: boolean;
   documents?: {
     owner?: string;
     worker?: string;

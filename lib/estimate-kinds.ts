@@ -43,6 +43,13 @@ export type Estimate = {
   meetingId?: string;
   sourceTitle?: string;
   rows: EstimateRow[];
+  /**
+   * 当初の請負金額（税抜）。増減表で使う。
+   * これが無いと「変更後いくらになるか」を出せないので、増減表が成立しない。
+   */
+  baseAmount?: number | null;
+  /** 当初の見積書。現場にアップロードしたファイルを紐づけて参照する */
+  baseFileId?: string;
   /** 消費税率（%） */
   taxRate: number;
   note: string;
