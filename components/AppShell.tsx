@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import type { PublicUser } from '@/lib/roles';
 import Logo from '@/components/Logo';
+import AccountMenu from '@/components/AccountMenu';
 
 /**
  * 社内側の共通の枠。
@@ -34,33 +33,27 @@ export default function AppShell({
   onSelect?: (key: string) => void;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-
-  async function logout() {
-    setBusy(true);
-    await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'logout' }),
-    });
-    router.push('/login');
-    router.refresh();
-  }
-
   const item =
-    'w-full whitespace-nowrap rounded-xl px-4 py-2.5 text-left text-[14px] font-bold transition';
-  const off = 'bg-white text-slate-600 hover:text-slate-900 lg:bg-transparent lg:hover:bg-white';
+    'w-full whitespace-nowrap rounded-lg px-3 py-2 text-left text-[14px] font-bold transition';
+  const off = 'bg-white text-slate-600 hover:text-slate-900 lg:bg-transparent lg:hover:bg-slate-200';
   const on = 'bg-slate-900 text-white';
 
   return (
     <main className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-slate-100/90 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[1240px] items-center gap-4 px-5 py-3">
-          <Link href="/" aria-label="現場の一覧へ">
+      {/* 上の帯は「いまどこにいるか」と「自分は誰か」だけに使う。
+          氏名やログアウトを出しっぱなしにすると、毎日使う人には邪魔になる */}
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white">
+        <div className="mx-auto flex w-full max-w-[1240px] items-center gap-3 px-5 py-2.5">
+          <Link href="/" aria-label="現場の一覧へ" className="shrink-0">
             <Logo size="sm" />
           </Link>
-          {title && <h1 className="min-w-0 truncate text-[16px] font-bold">{title}</h1>}
+          {title && (
+            <>
+              <span className="text-slate-300">/</span>
+              <h1 className="min-w-0 truncate text-[15px] font-bold">{title}</h1>
+            </>
+          )}
+          <AccountMenu me={me} />
         </div>
       </header>
 
@@ -94,50 +87,7 @@ export default function AppShell({
               </li>
             ))}
 
-            {/* 狭い画面では、アカウントも同じ列に並べる */}
-            <li className="shrink-0 lg:hidden">
-              <Link href="/me" className={`block ${item} ${off}`}>
-                マイページ
-              </Link>
-            </li>
-            <li className="shrink-0 lg:hidden">
-              <button onClick={logout} disabled={busy} className={`${item} ${off}`}>
-                ログアウト
-              </button>
-            </li>
           </ul>
-
-          {/* 広い画面では、アカウントはメニューの下端に置く */}
-          <div className="mt-4 hidden rounded-xl bg-white p-4 lg:block">
-            <div className="flex items-center gap-2">
-              {me.avatar ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={me.avatar} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
-              ) : (
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[12px] font-bold text-slate-500">
-                  {me.name.slice(0, 1)}
-                </span>
-              )}
-              <div className="min-w-0">
-                <p className="truncate text-[13px] font-bold">{me.name}</p>
-                <p className="truncate text-[11px] text-slate-500">
-                  {me.companyName ? `${me.companyName}・${me.role}` : me.role}
-                </p>
-              </div>
-            </div>
-            <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-2.5">
-              <Link href="/me" className="text-[12px] text-slate-600 underline">
-                マイページ
-              </Link>
-              <button
-                onClick={logout}
-                disabled={busy}
-                className="text-[12px] text-slate-400 underline"
-              >
-                ログアウト
-              </button>
-            </div>
-          </div>
         </nav>
 
         <div className="min-w-0">{children}</div>

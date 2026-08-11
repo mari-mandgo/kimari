@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import type { ProjectSummary } from '@/lib/store';
 import type { PublicUser } from '@/lib/roles';
 import AppShell from '@/components/AppShell';
+import Intro from '@/components/Intro';
 
 export default function ProjectList({
   me,
@@ -46,15 +47,6 @@ export default function ProjectList({
     }
   }
 
-  async function logout() {
-    await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'logout' }),
-    });
-    router.push('/login');
-    router.refresh();
-  }
 
   async function create() {
     if (!name.trim()) return;
@@ -76,6 +68,8 @@ export default function ProjectList({
 
   return (
     <AppShell me={me}>
+      {/* 初回だけ流す。毎回出すと仕事の前の壁になる */}
+      <Intro />
       <div className="max-w-[640px]">
         <header className="mb-6">
           <p className="text-[17px] font-bold leading-snug">話すだけで、現場が決まる。</p>
