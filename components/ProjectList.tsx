@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ProjectSummary } from '@/lib/store';
 import type { PublicUser } from '@/lib/roles';
-import Logo from '@/components/Logo';
+import AppShell from '@/components/AppShell';
 
 export default function ProjectList({
   me,
@@ -75,40 +75,13 @@ export default function ProjectList({
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="mx-auto w-full max-w-[560px] px-5 py-8">
-        <header className="mb-7 flex items-start justify-between gap-4">
-          <div>
-            <h1>
-              <Logo size="lg" />
-            </h1>
-            <p className="mt-2 text-[15px] font-bold leading-snug text-slate-900">
-              話すだけで、現場が決まる。
-            </p>
-            <p className="mt-0.5 text-[12px] leading-relaxed text-slate-500">
-              会話を、次の仕事に変えるリノベAIエージェント。
-            </p>
-          </div>
-          <div className="shrink-0 text-right">
-            <div className="flex items-center justify-end gap-2">
-              {me.avatar && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={me.avatar} alt="" className="h-8 w-8 rounded-full object-cover" />
-              )}
-              <span className="text-[13px] font-bold">{me.name}</span>
-            </div>
-            <p className="text-[11px] text-slate-500">
-              {me.companyName ? `${me.companyName}・${me.role}` : me.role}
-            </p>
-            <div className="mt-1 flex items-center justify-end gap-3">
-              <Link href="/me" className="text-[11px] text-slate-500 underline">
-                マイページ
-              </Link>
-              <button onClick={logout} className="text-[11px] text-slate-400 underline">
-                ログアウト
-              </button>
-            </div>
-          </div>
+    <AppShell me={me}>
+      <div className="max-w-[640px]">
+        <header className="mb-6">
+          <p className="text-[17px] font-bold leading-snug">話すだけで、現場が決まる。</p>
+          <p className="mt-0.5 text-[13px] leading-relaxed text-slate-500">
+            会話を、次の仕事に変えるリノベAIエージェント。
+          </p>
         </header>
 
         {/* 同僚を会社へ招くコード。拾い出しのルールはこの単位で共有される */}
@@ -228,6 +201,6 @@ export default function ProjectList({
           </div>
         </section>
       </div>
-    </main>
+    </AppShell>
   );
 }

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { ROLES, type PublicUser } from '@/lib/roles';
 import type { Company } from '@/lib/companies';
 import type { TakeoffRule } from '@/lib/takeoff-rules';
-import Logo from '@/components/Logo';
+import AppShell from '@/components/AppShell';
 
 /**
  * マイページ。自分が何を登録したのかを、ひとところで確認できるようにする。
@@ -186,17 +186,8 @@ export default function MyPage({ me }: { me: PublicUser }) {
   const input = 'w-full rounded-xl border border-slate-300 px-4 py-3 text-[15px]';
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <div className="mx-auto w-full max-w-[560px] px-5 py-8">
-        <header className="mb-7">
-          <Link href="/" className="text-[13px] text-slate-500 underline">
-            ← 現場の一覧
-          </Link>
-          <h1 className="mt-3">
-            <Logo size="lg" />
-          </h1>
-          <p className="mt-2 text-[17px] font-bold">マイページ</p>
-        </header>
+    <AppShell me={me} title="マイページ">
+      <div className="max-w-[640px]">
 
         {/* 自分のこと */}
         <section className={card}>
@@ -507,6 +498,6 @@ export default function MyPage({ me }: { me: PublicUser }) {
 
         {error && <p className="mt-4 text-[13px] text-rose-700">{error}</p>}
       </div>
-    </main>
+    </AppShell>
   );
 }

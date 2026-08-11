@@ -8,7 +8,7 @@ import { formatCost } from '@/lib/pricing';
 import type { Project } from '@/lib/store';
 import Link from 'next/link';
 import ProjectSettings from '@/components/ProjectSettings';
-import Logo from '@/components/Logo';
+import AppShell from '@/components/AppShell';
 import FeedbackInbox from '@/components/FeedbackInbox';
 import FileBoard from '@/components/FileBoard';
 import Recorder from '@/components/Recorder';
@@ -210,87 +210,23 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
   const estimates = project.estimates ?? [];
 
   return (
-    <main className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-slate-100/90 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[1240px] items-center gap-4 px-5 py-3">
-          <Link href="/" aria-label="現場の一覧へ">
-            <Logo size="sm" />
-          </Link>
-          <h1 className="min-w-0 truncate text-[16px] font-bold">{project.name}</h1>
-          <Link
-            href="/"
-            className="ml-auto shrink-0 text-[13px] font-bold text-slate-500 hover:text-slate-900"
-          >
-            ← 現場の一覧
-          </Link>
-        </div>
-      </header>
-
-      <div className="mx-auto grid w-full max-w-[1240px] gap-6 px-5 py-6 lg:grid-cols-[220px_minmax(0,1fr)]">
-        {/* 左：どこに何があるかを固定する。縦に長い1枚ページだと迷うため */}
-        {/* min-w-0 が無いと、メニューが列の幅を押し広げて横スクロールが出る */}
-        <nav className="sticky top-[52px] z-10 -mx-5 min-w-0 bg-slate-100/95 px-5 py-2 backdrop-blur lg:top-[60px] lg:mx-0 lg:self-start lg:bg-transparent lg:px-0 lg:py-0 lg:backdrop-blur-none">
-          <ul className="scroll-clean flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
-            {TABS.map((t) => (
-              <li key={t.key} className="shrink-0">
-                <button
-                  onClick={() => setSection(t.key)}
-                  className={`w-full whitespace-nowrap rounded-xl px-4 py-2.5 text-left text-[14px] font-bold ${
-                    section === t.key
-                      ? 'bg-slate-900 text-white'
-                      : 'bg-white text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {t.label}
-                  {t.key === 'meeting' && project.meetings.length > 0 && (
-                    <span
-                      className={`ml-1.5 text-[12px] font-normal ${
-                        section === t.key ? 'text-slate-300' : 'text-slate-400'
-                      }`}
-                    >
-                      {project.meetings.length}
-                    </span>
-                  )}
-                  {t.key === 'estimates' && estimates.length > 0 && (
-                    <span
-                      className={`ml-1.5 text-[12px] font-normal ${
-                        section === t.key ? 'text-slate-300' : 'text-slate-400'
-                      }`}
-                    >
-                      {estimates.length}
-                    </span>
-                  )}
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-4 hidden rounded-xl bg-white p-4 lg:block">
-            <p className="text-[12px] text-slate-500">
-              {me.name}（{me.role}）
-            </p>
-            {project.inviteCode && (
-              <div className="mt-2 border-t border-slate-100 pt-2">
-                <p className="text-[11px] text-slate-400">職人の招待コード</p>
-                <div className="mt-0.5 flex items-center gap-2">
-                  <code className="font-mono text-[14px] font-bold">{project.inviteCode}</code>
-                  <button
-                    onClick={async () => {
-                      await navigator.clipboard.writeText(project.inviteCode as string);
-                      setCopied('invite');
-                      setTimeout(() => setCopied(null), 1800);
-                    }}
-                    className="text-[11px] text-slate-400 underline"
-                  >
-                    {copied === 'invite' ? '済' : 'コピー'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </nav>
-
-        <div className="min-w-0">
+    <AppShell
+      me={me}
+      title={project.name}
+      sections={TABS.map((t) => ({
+        key: t.key,
+        label: t.label,
+        badge:
+          t.key === 'meeting'
+            ? project.meetings.length
+            : t.key === 'estimates'
+              ? estimates.length
+              : undefined,
+      }))}
+      current={section}
+      onSelect={(k) => setSection(k as Section)}
+    >
+      <>
         {/* 施主へ渡すURL。常に見える場所に置く */}
         {section === 'top' && shareToken && (
           <section className="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -325,6 +261,28 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
             <p className="mt-2 text-[11px] text-slate-400">
               打ち合わせを記録するたびに、このページへ自動で積み上がります。送り直しは不要です。
             </p>
+
+            {project.inviteCode && (
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
+                <span className="text-[13px] font-bold">職人の招待コード</span>
+                <code className="font-mono text-[18px] font-bold tracking-widest">
+                  {project.inviteCode}
+                </code>
+                <button
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(project.inviteCode as string);
+                    setCopied('invite');
+                    setTimeout(() => setCopied(null), 1800);
+                  }}
+                  className="min-h-[36px] rounded-lg border border-slate-300 px-3 text-[12px] font-bold text-slate-700"
+                >
+                  {copied === 'invite' ? 'コピーしました' : 'コピー'}
+                </button>
+                <span className="text-[11px] text-slate-400">
+                  職人さんはこのコードでこの現場に入れます
+                </span>
+              </div>
+            )}
           </section>
         )}
 
@@ -776,8 +734,7 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
         )}
         </>
         )}
-        </div>
-      </div>
-    </main>
+      </>
+    </AppShell>
   );
 }
