@@ -438,8 +438,8 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
                 <option value="">打ち合わせの内容から判断する</option>
                 {PHASES.map((p) => (
                   <option key={p.week} value={p.label}>
-                    {p.week}週目・{p.label}
-                    {p.week === 4 ? '（ここから契約後）' : ''}
+                    {p.label}
+                    {p.label === 'ご契約' ? '（ここから契約後）' : ''}
                   </option>
                 ))}
               </select>

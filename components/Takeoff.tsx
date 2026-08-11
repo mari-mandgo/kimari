@@ -174,10 +174,7 @@ export default function Takeoff({
       {res.phase && (
         <div className="mb-3 rounded-xl bg-slate-900 p-4 text-white">
           <p className="text-[12px] text-slate-300">この打ち合わせの段階</p>
-          <p className="mt-0.5 text-[16px] font-bold">
-            {res.phase_week !== null && `${res.phase_week}週目・`}
-            {res.phase}
-          </p>
+          <p className="mt-0.5 text-[16px] font-bold">{res.phase}</p>
           {res.phase_reason && (
             <p className="mt-1 text-[12px] leading-relaxed text-slate-300">{res.phase_reason}</p>
           )}

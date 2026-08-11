@@ -169,8 +169,8 @@ export default function ProjectSettings({ project }: { project: Project }) {
               <option value="">まだ設定していません</option>
               {PHASES.map((p) => (
                 <option key={p.week} value={p.week}>
-                  {p.week}週目・{p.label}
-                  {p.week === 4 ? '（ここから契約後）' : ''}
+                  {p.label}
+                  {p.label === 'ご契約' ? '（ここから契約後）' : ''}
                 </option>
               ))}
             </select>

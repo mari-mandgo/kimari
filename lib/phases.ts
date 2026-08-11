@@ -1,25 +1,31 @@
 /**
- * マンション専有部リノベーションの標準工程。
+ * マンション専有部リノベーションの工程。
  *
- * 業界で広く使われている「14週」の進め方に沿う。
- * 週数はあくまで標準で、現場ごとに前後する。
+ * **持っているのは順番だけで、期間は持たない。**
+ * 何週で回すかは会社ごとに違う。短い会社もあれば、倍かける会社もある。
+ * 週数を画面に出すと、どこか一社のペースを全社に押しつけることになるので、
+ * 表に出すのは工程の名前だけにしてある。
  *
- * この工程がプロダクトの土台になる理由は2つ。
+ * この工程が土台になる理由は2つ。
  *
  * 1. **追加見積は「契約」を境に意味が変わる。**
- *    契約前（0〜3週）は、まだ何も約束していないので工事の全部が見積の対象。
- *    契約後（4週〜）は、契約に含まれる工事はやって当たり前なので、
+ *    契約前は、まだ何も約束していないので工事の全部が見積の対象。
+ *    契約後は、契約に含まれる工事はやって当たり前なので、
  *    追加になるのは「その変更がなければ発生しなかった分」だけになる。
  *
- * 2. **施主にとっては「いま何週目で、次に何があるか」が最大の関心事。**
+ * 2. **施主にとっては「いまどこで、次に何があるか」が最大の関心事。**
  *    工事は3か月以上かかる。いまどこにいるのかが見えないと不安になる。
  *
- * lib/store.ts の Project.stages（自由入力の段階）とは別物。
- * あちらは現場ごとの任意の目印、こちらは業界標準の物差し。
+ * 日程はここから作らない。「来週まで」「◯月◯日まで」は
+ * 打ち合わせでの発言から取る（lib/prompts.ts の due_date）。
  */
 
 export type Phase = {
-  /** 標準の週。0週目が初回打合せ */
+  /**
+   * 工程の順番。前後の判定と進行率だけに使う。
+   * 数値は「◯週目」ではない（画面には出さない）。
+   * 保存済みデータとの互換のため、フィールド名は week のまま
+   */
   week: number;
   /** 社内で使う呼び方 */
   label: string;
@@ -256,10 +262,16 @@ export function groupOfWeek(week: number | null | undefined): PhaseGroup | null 
   return PHASE_GROUPS.find((g) => g.weeks.includes(week)) ?? null;
 }
 
-/** 進行率。14週を100%とする */
+/**
+ * 進行率。
+ * 期間ではなく、工程の何番目まで来たかで出す。
+ * 会社によって各工程にかける日数が違うので、日数で割ると実感と合わなくなる。
+ */
 export function progressOfWeek(week: number | null | undefined): number | null {
   if (week === null || week === undefined) return null;
-  return Math.round((Math.min(Math.max(week, 0), 14) / 14) * 100);
+  const i = PHASES.findIndex((p) => p.week === week);
+  if (i < 0) return null;
+  return Math.round((i / (PHASES.length - 1)) * 100);
 }
 
 export function phaseByWeek(week: number | undefined): Phase | null {
@@ -272,9 +284,9 @@ export function phaseByLabel(label: string | undefined): Phase | null {
   return PHASES.find((p) => p.label === label) ?? null;
 }
 
-/** 拾い出しのプロンプトへ渡す一覧 */
+/** 拾い出しのプロンプトへ渡す一覧。期間は渡さず、順番と契約の前後だけ */
 export function phaseListForPrompt(): string {
   return PHASES.map(
-    (p) => `${p.week}週目｜${p.label}｜${p.afterContract ? '契約後' : '契約前'}`
+    (p, i) => `${i + 1}. ${p.label}（${p.afterContract ? '契約後' : '契約前'}）`
   ).join('\n');
 }
