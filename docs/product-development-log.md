@@ -78,9 +78,7 @@ python -m venv .venv
 ```
 録音（MediaRecorder／全端末）
   ↓
-文字起こし
-  ├ ブラウザ内蔵の音声認識（Android・PC Chrome）… その場・無料・端末内
-  └ ローカルWhisper（faster-whisper / small）… 本命。/api/transcribe
+文字起こし … faster-whisper（small）を自社サーバーで。/api/transcribe
   ↓
 個人情報のマスク（lib/mask.ts）← ルーターへ出る手前で必ず通す
   ↓
@@ -93,6 +91,10 @@ python -m venv .venv
 ```
 
 **音声そのものは外部サービスへ一切送らない。** 外へ出るのはマスク後のテキストだけ。
+
+以前はブラウザ内蔵の音声認識（SpeechRecognition）も併用していたが、外した。
+Chromeの実装は音声をGoogleのサーバーへ送るため、上の一文と両立しない。
+**同じ理由で、その場で文字になる系の機能を足すときは必ず送信先を確認すること。**
 
 ---
 
