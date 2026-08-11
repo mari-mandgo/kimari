@@ -35,8 +35,8 @@ npx next start -p 3001 -H 0.0.0.0
 ```
 
 - PCから: `http://localhost:3001`
-- スマホから: `http://192.168.1.131:3001`（同じWi-Fi。IPは変わることがある）
-- ログイン: `msdesignlabo.mari@gmail.com`
+- スマホから: `http://<PCのLAN内IP>:3001`（同じWi-Fi。IPは変わることがある）
+- ログイン: 自分で登録したメールアドレス
 - パスワードを忘れたとき: `node scripts/reset-password.mjs <メール> <新パスワード>`
 
 ### 環境変数（`.env.local`。gitには含めない）

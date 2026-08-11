@@ -1,36 +1,206 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# KIMARI
 
-## Getting Started
+**話すだけで、現場が決まる。**
+会話を、次の仕事に変えるリノベAIエージェント。
 
-First, run the development server:
+建築・リノベーションの打ち合わせを録音すると、そこから
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **追加見積が必要な変更**
+- 金額に影響しない決定
+- 保留と、その期限
+- 「言った言わない」になりそうな箇所
+
+を仕分けて、**施主向け・職人向け・社内保存用の3つの文書**に変えます。
+
+[AI HACK 2026](https://aihackathon.jp/) の参加作品です。LLMの呼び出しには **OrcaRouter** を使っています。
+
+制作の経緯はこちら → [コードを1行も書かずに、AI3人と組んで、現場で使えるものを作った話](https://zenn.dev/m_go/articles/794869d594e333)
+
+---
+
+## 議事録は作りません
+
+現場でいちばん揉めるのは、記録が無いことではありません。
+**お金が動く変更に、双方が気づいていないこと**です。
+
+> 「キッチン、もう少し窓側に寄せられないかな。60センチくらい？」
+
+施主にとっては「ちょっと動かすだけ」ですが、実際には給排水の移設が発生します。追加工事です。
+
+> 「建具の色、ホワイトよりオークのほうがいいなって」
+
+こちらは同一グレード内の色違いなので金額は変わりません。
+
+**どちらも「変更」です。** 汎用の議事録AIはこの2つを同じ「変更事項」として並べます。
+建設業では、変更が出たら書面での見積提示が建設業法で義務づけられています。
+**この線引きが、このプロダクトの本体です。**
+
+---
+
+## できること
+
+| | |
+|---|---|
+| **録音・文字起こし** | 音声は自社のサーバーの中だけで処理。外部の文字起こしサービスへ送らない |
+| **仕分け** | 追加見積が必要な変更 / 決定 / 保留と期限 / 認識のズレ の4つに分ける |
+| **3つの文書** | 施主向け・職人向け・社内保存用。金額と個人情報の出し分けもここで行う |
+| **多言語訳** | 職人向けの指示をベトナム語などへ |
+| **拾い出し** | 「キッチンを600mm動かす」から、**元の契約との差分**だけを工事項目に展開 |
+| **当初見積書の読み取り** | Excelの見積書から「契約に含まれる工事」を取り出し、差分判定の根拠にする |
+| **追加見積書** | 明細のみ / 表紙付き / 工事金額増減表。印刷とPDF保存まで |
+| **施主ページ** | 共有リンクを開くだけ。打ち合わせを記録するたびに自動で積み上がる |
+
+### 拾い出しは「差分」を出します
+
+工事の全部を並べると、見る側は不要な項目を消す作業に追われます。
+出すのは**その変更がなかったら発生しなかった分**だけです。
+
+同じ「キッチンを600mm移動」でも、工程によって出力が変わります。
+
+| 工程 | 追加見積に載る | 外したもの | 所要 | 概算原価 |
+|---|---|---|---|---|
+| 見積提出（契約前） | 16項目 | 3件 | 51秒 | 0.17円 |
+| **解体確認（契約後）** | **3項目** | **6件** | **32秒** | **0.09円** |
+
+外した項目も、理由を添えて別枠で返します。
+
+> 内部解体工事・解体廃材処分費 … 解体確認段階ですでに完了している工事であり、追加対象外
+
+### 金額はAIに出させません
+
+単価は会社ごと・時期ごとに違います。
+また、変更工事の見積は建設業法上、事業者が書面で提示する責任を負います。
+**KIMARIが出すのは「何を拾うべきか」まで**で、数量と単価は人が入れます。
+
+---
+
+## 実測値
+
+入力は2,448文字の打ち合わせ記録。為替は155円で計算。
+
+| 指定 | 実際に使われたモデル | 所要 | 概算原価 |
+|---|---|---|---|
+| `anthropic/claude-opus-5`（直指定） | claude-opus-5 | 99.3秒 | **約35.2円** |
+| `orcarouter/auto` | qwen3.7-plus | 104.7秒 | 約0.13円 |
+| `orcarouter/fusion-mini` | qwen3.7-flash | 64.0秒 | 約0.17円 |
+| `orcarouter/fusion-flash` | qwen3.7-flash | **46.8秒** | **約0.13円** |
+
+**約270分の1。** 追加見積が必要な3件の判定は、全モードで一致しました。
+
+実際の録音（8分16秒・2,532文字）では、仕分け9件が82秒・0.18円。
+3文書＋ベトナム語訳まで含めて **1件あたり0.42〜0.51円**。
+文字起こしは自社サーバーで動かすため **0円** です。
+
+詳細は [docs/benchmark.md](docs/benchmark.md) にあります。
+
+---
+
+## 音声を外に出さない設計
+
+打ち合わせの録音には、施主の氏名も住所も電話番号もそのまま入っています。
+
+```
+録音（スマホ / PC）
+  ↓
+文字起こし（自社のサーバー・faster-whisper）
+  ↓
+個人情報のマスク  ← ここより先に生の情報を出さない
+  ↓
+仕分け（OrcaRouter → LLM）
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+音声が渡るのは、録音した端末と自社のサーバーまでです。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+以前はブラウザ内蔵の音声認識（`SpeechRecognition`）も併用していましたが、外しました。
+Chromeの実装は音声をGoogleのサーバーへ送るため、上の前提と両立しません。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 動かし方
 
-To learn more about Next.js, take a look at the following resources:
+### 必要なもの
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Node.js 20以上
+- Python 3.10以上（文字起こし用）
+- OrcaRouter の APIキー
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 手順
 
-## Deploy on Vercel
+```bash
+npm install
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 文字起こし環境（faster-whisper）
+python -m venv .venv
+./.venv/Scripts/python.exe -m pip install faster-whisper openpyxl   # Windows
+# source .venv/bin/activate && pip install faster-whisper openpyxl  # macOS / Linux
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`.env.local` を作ります。
+
+```
+ORCA_API_KEY=sk-orca-...
+ORCA_BASE_URL=https://api.orcarouter.ai/v1
+```
+
+起動します。
+
+```bash
+npm run dev -- -p 3001
+# 本番ビルドで確認するとき
+npm run build && npx next start -p 3001
+```
+
+`http://localhost:3001` を開き、新規登録してから現場を作ってください。
+
+### 試してみる
+
+録音がなくても動きを確かめられます。
+現場ページの**トップ**にある「サンプルを入れて開く」を押すと、
+実際の打ち合わせ記録が入った状態で「打ち合わせ」タブが開きます。
+あとは「仕分ける」を押すだけです。
+
+---
+
+## 構成
+
+```
+app/
+  api/
+    analyze/          仕分け
+    documents/        3文書＋翻訳
+    takeoff/          拾い出し（+ rules/ 会社ごとの補正）
+    transcribe/       ローカルWhisperで文字起こし
+    projects/[id]/    現場・ファイル・追加見積・当初見積書の読み取り
+    share/[token]/    施主からの連絡（認証なし）
+  p/[id]/             現場ページ（社内）
+  s/[token]/          施主ページ（ログイン不要）
+lib/
+  prompts.ts          判定基準。このプロダクトの中身
+  phases.ts           リノベーションの工程。契約の前後で判定が変わる
+  mask.ts             個人情報のマスク。ルーターへ出る手前で必ず通す
+  orca.ts             OrcaRouter接続。全リクエストのモデル・トークン・時間を記録
+  pricing.ts          原価の概算
+scripts/
+  transcribe.py       faster-whisper
+  read-estimate.py    Excelの見積書から工事項目を抜き出す（数値は捨てる）
+  seed-history.mjs    デモ用の打ち合わせ履歴
+docs/                 実測値・料金設計・デモ台本・開発の記録
+```
+
+データベースは使わず、`data/` 以下のJSONファイルで持っています。
+期間内に作りきるのが最優先で、認証やスキーマ設計に日数を溶かさない判断でした。
+
+---
+
+## まだできていないこと
+
+- 話者分離（3人以上の会話では、誰の発言かを分けられません）
+- メール通知（施主からの連絡や期限は、開かないと気づけません）
+- PDFの見積書からの読み取り（いまはExcelのみ）
+- 本物の現場での運用（実際の録音と実際の見積書では確かめています）
+
+---
+
+## ライセンス
+
+MIT

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Item } from '@/app/api/analyze/route';
 import type { TakeoffResponse } from '@/app/api/takeoff/route';
@@ -40,6 +40,25 @@ export default function Takeoff({
   const [fixOpen, setFixOpen] = useState(false);
   const [fixText, setFixText] = useState('');
   const [fixNote, setFixNote] = useState<string | null>(null);
+  /** 先読み中かどうか。押す前から走っている場合に表示を変える */
+  const [ahead, setAhead] = useState(false);
+  const started = useRef(false);
+
+  /**
+   * 仕分けが出た時点で、押される前に走らせておく。
+   *
+   * 利用者は仕分け結果を読むのに数十秒かける。その間サーバーは遊んでいるので、
+   * そこで済ませてしまえば、押した瞬間に出る。
+   * 追加見積の対象は毎回3件前後なので、まとめて走らせても負担にならない。
+   * どのみち押される処理なので、原価も増えない。
+   */
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    setAhead(true);
+    run().finally(() => setAhead(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function run() {
     setLoading(true);
@@ -146,20 +165,27 @@ export default function Takeoff({
     setTimeout(() => setCopied(false), 2000);
   }
 
+  // 先読み中は「押したのに待たされる」形にせず、準備中だと分かるようにする
   if (!res) {
     return (
-      <div className="mt-4 border-t border-slate-200 pt-4">
-        <button
-          onClick={run}
-          disabled={loading}
-          className="min-h-[44px] rounded-xl border-2 border-slate-900 px-4 text-[14px] font-bold text-slate-900 disabled:opacity-40"
-        >
-          {loading ? '拾い出しています…' : '拾い出しを展開する'}
-        </button>
-        <span className="ml-3 text-[13px] text-slate-500">
+      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-200 pt-4">
+        {ahead || loading ? (
+          <span className="flex min-h-[44px] items-center gap-2 text-[14px] font-bold text-slate-500">
+            <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-slate-900" />
+            拾い出しを準備しています…
+          </span>
+        ) : (
+          <button
+            onClick={run}
+            className="min-h-[44px] rounded-xl border-2 border-slate-900 px-4 text-[14px] font-bold text-slate-900"
+          >
+            拾い出しを展開する
+          </button>
+        )}
+        <span className="text-[13px] text-slate-500">
           この変更で発生する工事項目を出します（金額は出しません）
         </span>
-        {error && <p className="mt-2 text-[13px] text-rose-700">{error}</p>}
+        {error && <p className="w-full text-[13px] text-rose-700">{error}</p>}
       </div>
     );
   }
