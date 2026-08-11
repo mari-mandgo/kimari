@@ -44,7 +44,7 @@ export default function Intro() {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 transition-opacity duration-400 ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-400 ${
         leaving ? 'opacity-0' : 'opacity-100'
       }`}
     >
@@ -55,12 +55,12 @@ export default function Intro() {
         muted
         playsInline
         onEnded={close}
-        className="max-h-[70vh] w-full max-w-[720px] object-contain"
+        className="max-h-[42vh] w-full max-w-[380px] object-contain"
       />
-      <p className="mt-6 text-[15px] font-bold text-white">話すだけで、現場が決まる。</p>
+      <p className="mt-5 text-[15px] font-bold text-slate-900">話すだけで、現場が決まる。</p>
       <button
         onClick={close}
-        className="mt-5 min-h-[40px] rounded-full border border-white/30 px-5 text-[13px] font-bold text-white/80 hover:bg-white/10"
+        className="mt-5 min-h-[40px] rounded-full border border-slate-300 px-5 text-[13px] font-bold text-slate-500 hover:bg-slate-50"
       >
         スキップ
       </button>
