@@ -1,5 +1,5 @@
 ---
-title: "私はコードを書いていない。AI3人と組んで、現場で使えるものを作った話（AI HACK 2026）"
+title: "コードを1行も書かずに、AI3人と組んで、現場で使えるものを作った話（AI HACK 2026）"
 emoji: "🏠"
 type: "tech"
 topics: ["ai", "claudecode", "llm", "orcarouter", "nextjs"]
