@@ -9,11 +9,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import type { FileKind, StoredFile } from './file-kinds';
+import { DATA_ROOT, IS_DEMO } from './demo';
 
 export { FILE_KINDS } from './file-kinds';
 export type { FileKind, StoredFile };
 
-const ROOT = path.join(process.cwd(), 'data', 'uploads');
+const ROOT = path.join(process.cwd(), DATA_ROOT, 'uploads');
 
 const ALLOWED = new Set([
   'image/jpeg',
@@ -34,7 +35,8 @@ function dirFor(projectId: string): string {
   // パス操作を防ぐため、IDは英数字とハイフンだけに限る
   if (!/^[A-Za-z0-9-]+$/.test(projectId)) throw new Error('不正なID');
   const dir = path.join(ROOT, projectId);
-  fs.mkdirSync(dir, { recursive: true });
+  // デモのディスクは読み取り専用。作ろうとすると読み取りまで巻き込んで落ちる
+  if (!IS_DEMO) fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
 
@@ -43,6 +45,8 @@ export async function saveFile(
   file: File,
   meta: { kind: FileKind; caption: string; meetingId?: string }
 ): Promise<StoredFile> {
+  // デモは書き込まない。見知らぬ人がアップロードしたものを他人に見せない意味もある
+  if (IS_DEMO) throw new Error('このデモではファイルを追加できません');
   const dir = dirFor(projectId);
   const ext = path.extname(file.name).toLowerCase().slice(0, 10) || '';
   const id = crypto.randomUUID();

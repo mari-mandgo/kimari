@@ -12,6 +12,7 @@ import AppShell from '@/components/AppShell';
 import FeedbackInbox from '@/components/FeedbackInbox';
 import FileBoard from '@/components/FileBoard';
 import Recorder from '@/components/Recorder';
+import DemoRecorder from '@/components/DemoRecorder';
 import Takeoff from '@/components/Takeoff';
 import MeetingList from '@/components/MeetingList';
 import ContractScope from '@/components/ContractScope';
@@ -73,7 +74,16 @@ const ORDER: Item['category'][] = ['cost_impact', 'risk', 'decision_no_cost', 'p
 
 const STEPS = ['個人情報を伏せています', 'ルーターがモデルを選んでいます', '会話を仕分けています'];
 
-export default function Workspace({ project, me }: { project: Project; me: PublicUser }) {
+export default function Workspace({
+  project,
+  me,
+  isDemo = false,
+}: {
+  project: Project;
+  me: PublicUser;
+  /** 公開デモか。録音の代わりに音声プレイヤーを出す */
+  isDemo?: boolean;
+}) {
   const [section, setSection] = useState<Section>('top');
   const [transcript, setTranscript] = useState('');
   const [names, setNames] = useState(project.names.join(', '));
@@ -367,7 +377,9 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
                   {
                     n: '1',
                     t: '打ち合わせを録音する',
-                    d: 'スマホやPCをテーブルに置いて録音します。あとから音声ファイルを取り込むこともできます。文字起こしはこの端末とサーバーの中だけで行い、音声を外部へ送りません。',
+                    d: isDemo
+                      ? 'スマホやPCをテーブルに置いて録音し、そのままこのサーバーで文字起こしします。音声を外部へは送りません。この公開デモには文字起こしのサーバーが無いため、実際に録った打ち合わせの音声と、その文字起こしを置いてあります。'
+                      : 'スマホやPCをテーブルに置いて録音します。あとから音声ファイルを取り込むこともできます。文字起こしはこの端末とサーバーの中だけで行い、音声を外部へ送りません。',
                   },
                   {
                     n: '2',
@@ -419,7 +431,11 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
             </section>
 
             <div className="mb-6">
-              <Recorder onTranscript={(text) => setTranscript(text)} />
+              {isDemo ? (
+                <DemoRecorder onTranscript={setTranscript} onNames={setNames} />
+              ) : (
+                <Recorder onTranscript={(text) => setTranscript(text)} />
+              )}
             </div>
           </>
         )}
@@ -484,8 +500,13 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
           onOpen={openMeeting}
         />
 
+        {/* 公開デモには文字起こし用のサーバーが無い。動かないボタンを置かず、音声を聴ける形にする */}
         <div className="mb-6">
-          <Recorder onTranscript={(text) => setTranscript(text)} />
+          {isDemo ? (
+            <DemoRecorder onTranscript={setTranscript} onNames={setNames} />
+          ) : (
+            <Recorder onTranscript={(text) => setTranscript(text)} />
+          )}
         </div>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

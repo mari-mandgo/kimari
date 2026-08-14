@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation';
 import LoginForm from '@/components/LoginForm';
+import { IS_DEMO } from '@/lib/demo';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +15,9 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ error?: string; mode?: string }>;
 }) {
+  // 公開デモではアカウントを作らせない。LPのボタンもここへ来るので、デモへ送る
+  if (IS_DEMO) redirect('/demo');
+
   const params = await searchParams;
   const initialMode = params.mode === 'register' ? 'register' : 'login';
   return <LoginForm initialError={params.error} initialMode={initialMode} />;

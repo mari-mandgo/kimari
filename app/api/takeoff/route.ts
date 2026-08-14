@@ -6,6 +6,7 @@ import { rulesAsPrompt, listRules, type TakeoffRule } from '@/lib/takeoff-rules'
 import { getProject } from '@/lib/store';
 import { findUserById } from '@/lib/auth';
 import { scopeOf } from '@/lib/roles';
+import { takeDemoQuota } from '@/lib/demo';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -57,6 +58,13 @@ export async function POST(req: Request) {
 
     if (!title || typeof title !== 'string') {
       return NextResponse.json({ error: 'title がありません' }, { status: 400 });
+    }
+
+    if (!takeDemoQuota().ok) {
+      return NextResponse.json(
+        { error: 'このデモの本日分の実行回数に達しました。動画とリポジトリをご覧ください。' },
+        { status: 429 }
+      );
     }
 
     const project = getProject(String(projectId ?? ''));

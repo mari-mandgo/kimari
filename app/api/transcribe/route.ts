@@ -4,6 +4,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { currentUser } from '@/lib/session';
+import { IS_DEMO } from '@/lib/demo';
 
 export const runtime = 'nodejs';
 export const maxDuration = 600;
@@ -25,6 +26,18 @@ const MAX_BYTES = 100 * 1024 * 1024;
  * 復元することを実録音で確認済み。
  */
 export async function POST(req: Request) {
+  /*
+    公開デモには faster-whisper（Python）が無い。
+    音声を外へ出さない作りなので、代わりに外部の文字起こしサービスへ回す、
+    という逃げ方はしない。**できないことは、できないと返す。**
+  */
+  if (IS_DEMO) {
+    return NextResponse.json(
+      { error: 'この公開デモでは文字起こしを行いません（自社サーバーで動かす部分のため）' },
+      { status: 501 }
+    );
+  }
+
   const me = await currentUser();
   if (!me) return NextResponse.json({ error: 'ログインしてください' }, { status: 401 });
 

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { chat, parseJsonLoose, type CallMeta, MODEL_AUTO } from '@/lib/orca';
 import { maskPII, unmask, verifyMasked } from '@/lib/mask';
 import { EXTRACT_SYSTEM, extractUser } from '@/lib/prompts';
+import { takeDemoQuota } from '@/lib/demo';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -43,6 +44,13 @@ export async function POST(req: Request) {
 
     if (!transcript || typeof transcript !== 'string') {
       return NextResponse.json({ error: 'transcript がありません' }, { status: 400 });
+    }
+
+    if (!takeDemoQuota().ok) {
+      return NextResponse.json(
+        { error: 'このデモの本日分の実行回数に達しました。動画とリポジトリをご覧ください。' },
+        { status: 429 }
+      );
     }
 
     // 1. 個人情報を伏せる（ルーターへ送る前に必ず通す）

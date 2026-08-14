@@ -13,7 +13,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 
-const DIR = path.join(process.cwd(), 'data');
+import { DATA_ROOT, DEMO_USER, IS_DEMO } from './demo';
+
+const DIR = path.join(process.cwd(), DATA_ROOT);
 const USERS = path.join(DIR, 'users.json');
 const SESSIONS = path.join(DIR, 'sessions.json');
 
@@ -158,6 +160,12 @@ export function destroySession(token: string) {
 }
 
 export function userFromToken(token: string | undefined): PublicUser | null {
+  /*
+    デモは常にこの人として通す。
+    見知らぬ人にアカウントを作らせないため。
+    セッションの保存も書き込みなので、そもそも成立しない。
+  */
+  if (IS_DEMO) return DEMO_USER;
   if (!token) return null;
   const s = listSessions().find((x) => x.token === token);
   if (!s) return null;

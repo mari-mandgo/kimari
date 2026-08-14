@@ -12,8 +12,10 @@ import type { Item } from '@/app/api/analyze/route';
 import type { StoredFile } from './files';
 // 型だけ。実体は読まない（クライアントへ node のモジュールを持ち込まないため）
 import type { CallMeta } from './orca';
+import { DATA_ROOT, IS_DEMO } from './demo';
 
-const DIR = path.join(process.cwd(), 'data', 'projects');
+// 公開デモは demo-data/ を読む。実案件が混ざったまま公開する事故を、置き場所ごと分けて防ぐ
+const DIR = path.join(process.cwd(), DATA_ROOT, 'projects');
 
 /**
  * 施主からの連絡。共有ページを見て気づいたことを、その場で送ってもらう。
@@ -188,6 +190,8 @@ export type ProjectSummary = {
 };
 
 function ensureDir() {
+  // デモのディスクは読み取り専用。作ろうとすると例外で全部止まる
+  if (IS_DEMO) return;
   fs.mkdirSync(DIR, { recursive: true });
 }
 
@@ -319,8 +323,14 @@ export function getProject(id: string): Project | null {
 }
 
 export function saveProject(p: Project): Project {
-  ensureDir();
   const next = { ...p, updatedAt: new Date().toISOString() };
+  /*
+    デモは保存しない。
+    画面には保存できたように返すので、その場では最後まで触れる。
+    次に開いた人には元の状態で見える。誰かの操作が次の人に残らないようにする。
+  */
+  if (IS_DEMO) return next;
+  ensureDir();
   fs.writeFileSync(path.join(DIR, `${p.id}.json`), JSON.stringify(next, null, 2), 'utf8');
   return next;
 }
@@ -346,6 +356,7 @@ export function createProject(name: string, names: string[] = [], ownerId?: stri
 }
 
 export function deleteProject(id: string): boolean {
+  if (IS_DEMO) return false;
   const file = path.join(DIR, `${id}.json`);
   if (!fs.existsSync(file)) return false;
   fs.unlinkSync(file);

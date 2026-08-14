@@ -22,9 +22,12 @@ const COOKIE_OPTIONS = {
   sameSite: 'lax' as const,
   path: '/',
   maxAge: 60 * 60 * 24 * 30,
-  // secure を付けると http のLAN内アクセス（スマホ実機確認）で Cookie が
-  // 受け取り拒否される。公開時に https 配下へ置く際は true に戻すこと。
-  secure: false,
+  /*
+    secure を付けると、http のLAN内アクセス（スマホ実機確認）で Cookie が受け取り拒否される。
+    そのため開発中は付けない。**https へ出すときは必ず付ける。**
+    人の記憶に頼ると戻し忘れるので、本番ビルドかどうかで自動的に切り替える。
+  */
+  secure: process.env.NODE_ENV === 'production',
 };
 
 /** ログイン中のユーザーを返す */

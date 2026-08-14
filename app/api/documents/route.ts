@@ -9,6 +9,7 @@ import {
 } from '@/lib/prompts';
 import type { Item } from '../analyze/route';
 import { estimateWords } from '@/lib/phases';
+import { takeDemoQuota } from '@/lib/demo';
 
 export const runtime = 'nodejs';
 export const maxDuration = 180;
@@ -70,6 +71,13 @@ export async function POST(req: Request) {
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: '仕分け結果がありません' }, { status: 400 });
+    }
+
+    if (!takeDemoQuota().ok) {
+      return NextResponse.json(
+        { error: 'このデモの本日分の実行回数に達しました。動画とリポジトリをご覧ください。' },
+        { status: 429 }
+      );
     }
 
     // 文書生成でも、ルーターへ出る手前で必ずマスクを通す
