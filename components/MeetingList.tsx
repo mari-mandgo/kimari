@@ -18,10 +18,16 @@ export default function MeetingList({
   projectId,
   meetings,
   shareToken,
+  openId,
+  onOpen,
 }: {
   projectId: string;
   meetings: Meeting[];
   shareToken?: string;
+  /** いま下に開いている打ち合わせ */
+  openId?: string | null;
+  /** 仕分けた直後と同じ画面に戻す */
+  onOpen?: (m: Meeting) => void;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -56,6 +62,9 @@ export default function MeetingList({
       </h2>
       <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
         仕分けただけでは施主に見えません。内容を確かめてから公開してください。
+        <br />
+        「開く」を押すと、仕分けた直後と同じ画面に戻ります。3つの文書の作成、拾い出し、
+        ルーターへ送った本文の確認は、そこから行えます。
       </p>
 
       <ul className="mt-3 space-y-2">
@@ -85,6 +94,18 @@ export default function MeetingList({
                 </span>
 
                 <div className="ml-auto flex flex-wrap gap-2">
+                  {onOpen && (
+                    <button
+                      onClick={() => onOpen(m)}
+                      className={`min-h-[34px] rounded-lg px-3 text-[12px] font-bold ${
+                        openId === m.id
+                          ? 'bg-slate-200 text-slate-700'
+                          : 'border border-slate-900 text-slate-900'
+                      }`}
+                    >
+                      {openId === m.id ? '開いています' : '開く'}
+                    </button>
+                  )}
                   <button
                     onClick={() => setOpen(isOpen ? null : m.id)}
                     className="min-h-[34px] rounded-lg border border-slate-300 px-3 text-[12px] font-bold text-slate-700"

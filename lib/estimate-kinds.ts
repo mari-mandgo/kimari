@@ -6,7 +6,7 @@
 
 export const ESTIMATE_TEMPLATES = [
   { key: 'detail', label: '明細のみ', hint: '社内・工事会社とのやり取り用' },
-  { key: 'cover', label: '表紙付き', hint: '施主へお出しする追加見積書' },
+  { key: 'cover', label: '表紙付き', hint: '施主へお出しする見積書' },
   { key: 'delta', label: '工事金額増減表', hint: '竣工確認で追加と減額をまとめて精算' },
 ] as const;
 export type EstimateTemplate = (typeof ESTIMATE_TEMPLATES)[number]['key'];
@@ -32,6 +32,14 @@ export type Estimate = {
   id: string;
   /** 追加見積 No.1 のような通し番号 */
   no: number;
+  /**
+   * 契約前に作ったものか。作った時点の工程で決まり、あとから変わらない。
+   *
+   * 契約前は比べる契約が無いので「追加」ではなく見積そのもの。
+   * 施主へ出す紙の表題が変わるため、現場の今の工程ではなく、
+   * この見積を作ったときの工程で持つ。
+   */
+  beforeContract?: boolean;
   template: EstimateTemplate;
   /** 件名 */
   title: string;

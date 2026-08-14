@@ -66,6 +66,11 @@ export async function PATCH(req: Request, { params }: Ctx) {
         summary: incoming.summary ?? '',
         shareToken: newId('s'),
         documents: incoming.documents,
+        // あとから開き直したときに、その場と同じものを見せるために残す
+        sentToRouter: incoming.sentToRouter,
+        privacy: incoming.privacy,
+        calls: incoming.calls,
+        phaseLabel: incoming.phaseLabel,
         createdAt: new Date().toISOString(),
       });
     }

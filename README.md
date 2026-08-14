@@ -14,7 +14,8 @@
 
 [AI HACK 2026](https://aihackathon.jp/) の参加作品です。LLMの呼び出しには **OrcaRouter** を使っています。
 
-制作の経緯はこちら → [コードを1行も書かずに、AI3人と組んで、現場で使えるものを作った話](https://zenn.dev/m_go/articles/794869d594e333)
+- **デモ動画** → https://youtu.be/6HwpSwbsNXw
+- **制作の経緯** → [コードを1行も書かずに、AI3人と組んで、現場で使えるものを作った話](https://zenn.dev/m_go/articles/794869d594e333)
 
 ---
 

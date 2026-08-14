@@ -50,6 +50,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     issuedOn: today,
     meetingId: body.meetingId,
     sourceTitle: body.sourceTitle,
+    // 作った時点の工程で決まる。あとから現場が進んでも表題は変えない
+    beforeContract: Boolean(body.beforeContract),
     rows,
     taxRate: 10,
     note: '',

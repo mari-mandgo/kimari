@@ -98,7 +98,7 @@ export default function EstimateEditor({
         </Link>
 
         <div className="mt-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <h1 className="text-[17px] font-bold">追加見積書をつくる</h1>
+          <h1 className="text-[17px] font-bold">{est.beforeContract ? '見積書' : '追加見積書'}をつくる</h1>
           <p className="mt-1 text-[13px] leading-relaxed text-slate-600">
             項目は拾い出しから入っています。<b>数量と単価は入力してください。</b>
             単価は会社ごと・時期ごとに違うため、AIには出させていません。
@@ -255,11 +255,12 @@ export default function EstimateEditor({
       <div className="mx-auto w-full max-w-[860px] bg-white px-5 py-8 shadow-sm print:max-w-none print:p-0 print:shadow-none">
         {hasCover && (
           <header className="mb-8">
+            {/* 契約前は比べる契約が無いので「追加」を付けない。施主へ出る紙なので特に効く */}
             <h2 className="text-center text-[24px] font-bold tracking-[0.3em]">
-              {isDelta ? '工事金額増減表' : '追加御見積書'}
+              {isDelta ? '工事金額増減表' : est.beforeContract ? '御見積書' : '追加御見積書'}
             </h2>
             <p className="mt-1 text-center text-[12px] text-slate-500">
-              追加見積 No.{est.no}
+              {est.beforeContract ? '見積' : '追加見積'} No.{est.no}
             </p>
 
             <div className="mt-8 flex flex-wrap items-end justify-between gap-6">

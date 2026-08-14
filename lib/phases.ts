@@ -284,6 +284,54 @@ export function phaseByLabel(label: string | undefined): Phase | null {
   return PHASES.find((p) => p.label === label) ?? null;
 }
 
+/**
+ * この段階が契約前か。工程の名前でも番号でも受ける。
+ *
+ * **分からないときは false（契約後の扱い）に倒す。**
+ * lib/prompts.ts が「段階が読み取れないときは『ご契約』とする」と決めているので、
+ * 画面の言葉もそれに揃える。契約前を契約後と呼ぶより、
+ * 契約後を契約前と呼ぶほうが害が大きい（出してはいけない項目を出すため）。
+ */
+export function isBeforeContract(phase?: string | number | null): boolean {
+  if (phase === null || phase === undefined || phase === '') return false;
+  const p = typeof phase === 'number' ? phaseByWeek(phase) : phaseByLabel(phase);
+  return p ? !p.afterContract : false;
+}
+
+/**
+ * 見積の呼び方。契約の前後で変える。
+ *
+ * 契約前は、比べる契約がまだ無い。出てくるのは「追加」ではなく見積そのものなので、
+ * 初回の打ち合わせから使い始めた人に「追加見積が必要」と出すと、
+ * 何に対する追加なのかが分からない。
+ * 散らばると片方だけ直し忘れるので、文言はここに集める。
+ */
+export function estimateWords(beforeContract: boolean) {
+  return beforeContract
+    ? {
+        need: '見積に入れる項目',
+        needHint: '金額が動くので、見積に載せます',
+        heading: '見積に入れる',
+        makeButton: '見積書をつくる',
+        excludedHint: '検討したうえで、見積の対象外と判断した項目です。',
+        scopeNote:
+          'まだご契約前なので、必要な工事を全部出しています。金額はAIが出しません（単価は会社ごと・時期ごとに違うためです）。',
+        briefHeading: '金額に影響する内容（見積の対象）',
+        docSection: 'お見積りに含む内容',
+      }
+    : {
+        need: '追加見積が必要',
+        needHint: '書面での提示が要ります',
+        heading: '追加見積に載せる',
+        makeButton: '追加見積書をつくる',
+        excludedHint: '検討したうえで、追加見積の対象外と判断した項目です。',
+        scopeNote:
+          'もともとの契約に含まれる工事は出していません。出しているのは、この変更がなければ発生しなかった分だけです。金額はAIが出しません（単価は会社ごと・時期ごとに違い、変更工事の見積は書面で提示する必要があるため）。',
+        briefHeading: '金額に影響する変更（追加見積の対象）',
+        docSection: '追加お見積りとなる内容',
+      };
+}
+
 /** 拾い出しのプロンプトへ渡す一覧。期間は渡さず、順番と契約の前後だけ */
 export function phaseListForPrompt(): string {
   return PHASES.map(

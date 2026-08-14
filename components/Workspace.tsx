@@ -1,11 +1,11 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AnalyzeResponse, Item } from '@/app/api/analyze/route';
 import type { DocumentsResponse } from '@/app/api/documents/route';
 import { SAMPLE_TRANSCRIPT, SAMPLE_NAMES } from '@/lib/sample';
 import { formatCost } from '@/lib/pricing';
-import type { Project } from '@/lib/store';
+import type { Meeting, Project } from '@/lib/store';
 import Link from 'next/link';
 import ProjectSettings from '@/components/ProjectSettings';
 import AppShell from '@/components/AppShell';
@@ -15,7 +15,7 @@ import Recorder from '@/components/Recorder';
 import Takeoff from '@/components/Takeoff';
 import MeetingList from '@/components/MeetingList';
 import ContractScope from '@/components/ContractScope';
-import { PHASES } from '@/lib/phases';
+import { PHASES, estimateWords, isBeforeContract } from '@/lib/phases';
 import { ESTIMATE_TEMPLATES } from '@/lib/estimate-kinds';
 import type { PublicUser } from '@/lib/roles';
 
@@ -28,6 +28,7 @@ const DOC_TABS = [
 ] as const;
 
 const CATEGORY = {
+  // cost_impact の label と hint は、契約の前後で言い方が変わる（lib/phases.ts の estimateWords）
   cost_impact: {
     label: '追加見積が必要',
     hint: '書面での提示が要ります',
@@ -62,7 +63,7 @@ const CATEGORY = {
 const TABS = [
   { key: 'top', label: 'トップ' },
   { key: 'meeting', label: '打ち合わせ' },
-  { key: 'estimates', label: '追加見積' },
+  { key: 'estimates', label: '見積' },
   { key: 'files', label: '資料・図面・写真' },
   { key: 'info', label: '現場の情報' },
 ] as const;
@@ -95,6 +96,14 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
   const [meetingId, setMeetingId] = useState<string | null>(null);
   /** 共有は現場単位。打ち合わせが増えるたびに同じURLへ積み上がる */
   const [shareToken, setShareToken] = useState<string | null>(project.shareToken ?? null);
+  /** 保存済みの打ち合わせを開いたとき、結果の位置まで送る */
+  const resultRef = useRef<HTMLDivElement | null>(null);
+  /**
+   * 拾い出しがAIに判定させた段階。
+   * 段階を選ばずに「打ち合わせの内容から判断する」のまま使う人が多いので、
+   * 判定結果を受け取って、画面の言葉（追加見積／見積）をそちらに合わせる。
+   */
+  const [detectedWeek, setDetectedWeek] = useState<number | null>(null);
 
   // 待ち時間に「何をしているか」を出す。無言で42秒待たせない
   useEffect(() => {
@@ -153,7 +162,16 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? '失敗しました');
       setRes(j);
-      await saveMeeting({ transcript, items: j.items, summary: j.summary });
+      await saveMeeting({
+        transcript,
+        items: j.items,
+        summary: j.summary,
+        // 開き直したときに、この場と同じものを見せるために一緒に残す
+        sentToRouter: j.sentToRouter,
+        privacy: j.privacy,
+        calls: j.calls,
+        phaseLabel: phaseLabel || undefined,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -174,6 +192,7 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
           summary: res.summary,
           names: nameList(),
           lang: lang === 'なし' ? null : lang,
+          beforeContract,
         }),
       });
       const j = await r.json();
@@ -198,6 +217,56 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
       setDocsLoading(false);
     }
   }
+
+  /**
+   * 保存済みの打ち合わせを、仕分けた直後と同じ状態に戻す。
+   *
+   * 以前は仕分けた流れの中でしか結果を見られず、開き直すと
+   * 3つの文書を作ることも、ルーターへ送った本文を確かめることも、
+   * 拾い出し（現地で確認すること・注意点）を開くこともできなくなっていた。
+   * 保存はされているので、画面に戻すだけで足りる。
+   */
+  function openMeeting(m: Meeting) {
+    setMeetingId(m.id);
+    setMeetingDate(m.date);
+    setTranscript(m.transcript ?? '');
+    setPhaseLabel(m.phaseLabel ?? '');
+    setError(null);
+    setShowSent(false);
+    setShowTranslated(false);
+    setDetectedWeek(null);
+    setRes({
+      items: m.items ?? [],
+      summary: m.summary ?? '',
+      // 途中で足したフィールドなので、それ以前の打ち合わせには入っていない
+      privacy: m.privacy ?? { maskedCount: 0, tokens: [], verified: true },
+      calls: m.calls ?? [],
+      sentToRouter: m.sentToRouter ?? '',
+    });
+    setDocs(
+      m.documents?.owner
+        ? {
+            owner: m.documents.owner ?? '',
+            worker: m.documents.worker ?? '',
+            internal: m.documents.internal ?? '',
+            workerTranslated: m.documents.workerTranslated ?? null,
+            lang: m.documents.lang ?? null,
+            calls: [],
+          }
+        : null,
+    );
+    if (m.documents?.lang) setLang(m.documents.lang);
+    setSection('meeting');
+    // 結果は入力欄の下に出る。先頭へ戻すと「何も起きていない」ように見える
+    setTimeout(() => resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  }
+
+  /**
+   * 契約前かどうか。画面で選ばれた段階を優先し、無ければ拾い出しの判定を使う。
+   * 契約前は比べる契約が無いので、出るのは「追加」ではなく見積そのもの。
+   */
+  const beforeContract = isBeforeContract(phaseLabel || detectedWeek);
+  const words = estimateWords(beforeContract);
 
   const grouped = (c: Item['category']) => res?.items.filter((i) => i.category === c) ?? [];
   const allCalls = [...(res?.calls ?? []), ...(docs?.calls ?? [])];
@@ -338,7 +407,8 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
                 <button
                   onClick={() => {
                     setTranscript(SAMPLE_TRANSCRIPT);
-                    setNames([...SAMPLE_NAMES].join(', '));
+                    // SAMPLE_NAMES は文字列。展開すると「田, 中」と1文字ずつに割れる
+                    setNames(SAMPLE_NAMES);
                     setSection('meeting');
                   }}
                   className="mt-3 min-h-[44px] rounded-xl bg-slate-900 px-5 text-[14px] font-bold text-white"
@@ -367,14 +437,15 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
 
         {section === 'estimates' && (
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="text-[15px] font-bold">追加見積 {estimates.length}件</h2>
+            {/* 契約前の見積と追加見積が混ざるので、ここの見出しは中立にする */}
+            <h2 className="text-[15px] font-bold">見積 {estimates.length}件</h2>
             <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
               拾い出しの結果から作られます。数量と単価を入れて、印刷やPDFで出せます。
             </p>
             {estimates.length === 0 ? (
               <p className="mt-3 rounded-xl border border-dashed border-slate-300 p-6 text-center text-[13px] text-slate-500">
                 まだありません。「打ち合わせ」で拾い出しを出したあと、
-                「追加見積書をつくる」から作成できます。
+                「見積書をつくる」から作成できます。
               </p>
             ) : (
               <ul className="mt-3 space-y-2">
@@ -409,6 +480,8 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
           projectId={project.id}
           meetings={project.meetings}
           shareToken={shareToken ?? undefined}
+          openId={meetingId}
+          onOpen={openMeeting}
         />
 
         <div className="mb-6">
@@ -519,7 +592,7 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
         )}
 
         {res && (
-          <>
+          <div ref={resultRef}>
             {/* 開いた瞬間に伝わる一行 */}
             <section className="mt-8 rounded-2xl bg-slate-900 p-6 text-white">
               <p className="text-[13px] font-bold text-slate-300">この打ち合わせで見つかったもの</p>
@@ -527,7 +600,7 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
                 <div>
                   <span className="text-[52px] font-bold leading-none text-rose-400">{costCount}</span>
                   <span className="ml-2 text-[16px] font-bold">件</span>
-                  <p className="mt-1 text-[13px] text-slate-300">追加見積が必要</p>
+                  <p className="mt-1 text-[13px] text-slate-300">{words.need}</p>
                 </div>
                 <div>
                   <span className="text-[32px] font-bold leading-none text-amber-300">{riskCount}</span>
@@ -535,7 +608,8 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
                   <p className="mt-1 text-[13px] text-slate-300">認識のズレ</p>
                 </div>
               </div>
-              {demoMode && (
+              {/* この機能を足す前に保存した打ち合わせには、原価もマスクの記録も入っていない */}
+              {demoMode && allCalls.length > 0 && (
                 <p className="mt-4 border-t border-white/15 pt-3 text-[13px] text-slate-300">
                   原価 {formatCost(totalCost)}　/　個人情報 {res.privacy.maskedCount}件を伏せて送信
                   {res.privacy.verified ? '（漏れなし）' : '（要確認）'}　/
@@ -557,12 +631,15 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
                 const list = grouped(c);
                 if (!list.length) return null;
                 const meta = CATEGORY[c];
+                // 契約前は「追加」ではないので、この分類だけ言い方を差し替える
+                const label = c === 'cost_impact' ? words.need : meta.label;
+                const hint = c === 'cost_impact' ? words.needHint : meta.hint;
                 return (
                   <div key={c}>
                     <h2 className="mb-3 flex flex-wrap items-baseline gap-2">
-                      <span className="text-[17px] font-bold">{meta.label}</span>
+                      <span className="text-[17px] font-bold">{label}</span>
                       <span className="text-[13px] text-slate-500">
-                        {list.length}件{meta.hint && ` ・ ${meta.hint}`}
+                        {list.length}件{hint && ` ・ ${hint}`}
                       </span>
                     </h2>
                     <div className="space-y-3">
@@ -602,6 +679,7 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
                               canEditRules={me.role === '設計' || me.role === '現場管理'}
                               context={res?.summary}
                               phaseLabel={phaseLabel}
+                              onPhase={setDetectedWeek}
                             />
                           )}
                         </article>
@@ -717,20 +795,23 @@ export default function Workspace({ project, me }: { project: Project; me: Publi
               )}
             </section>
 
-            <section className="mt-8 pb-16">
-              <button
-                onClick={() => setShowSent((v) => !v)}
-                className="text-[13px] font-bold text-slate-600 underline"
-              >
-                {showSent ? '閉じる' : 'ルーターへ実際に送った本文を見る（個人情報の確認）'}
-              </button>
-              {showSent && (
-                <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-4 text-[12px] leading-relaxed">
-                  {res.sentToRouter}
-                </pre>
-              )}
-            </section>
-          </>
+            {/* この機能を足す前に保存した分は本文が残っていないので、出せるときだけ出す */}
+            {res.sentToRouter && (
+              <section className="mt-8 pb-16">
+                <button
+                  onClick={() => setShowSent((v) => !v)}
+                  className="text-[13px] font-bold text-slate-600 underline"
+                >
+                  {showSent ? '閉じる' : 'ルーターへ実際に送った本文を見る（個人情報の確認）'}
+                </button>
+                {showSent && (
+                  <pre className="mt-3 max-h-96 overflow-auto whitespace-pre-wrap rounded-xl border border-slate-200 bg-white p-4 text-[12px] leading-relaxed">
+                    {res.sentToRouter}
+                  </pre>
+                )}
+              </section>
+            )}
+          </div>
         )}
         </>
         )}

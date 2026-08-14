@@ -8,6 +8,7 @@ import {
   translateSystem,
 } from '@/lib/prompts';
 import type { Item } from '../analyze/route';
+import { estimateWords } from '@/lib/phases';
 
 export const runtime = 'nodejs';
 export const maxDuration = 180;
@@ -28,7 +29,8 @@ export type DocumentsResponse = {
 };
 
 /** 仕分け結果を、文書生成用のテキストに整える */
-function toBrief(items: Item[], summary: string): string {
+function toBrief(items: Item[], summary: string, beforeContract: boolean): string {
+  const words = estimateWords(beforeContract);
   const group = (c: Item['category']) => items.filter((i) => i.category === c);
   const fmt = (list: Item[]) =>
     list.length
@@ -42,7 +44,7 @@ function toBrief(items: Item[], summary: string): string {
 
   return [
     `【打ち合わせの概要】\n${summary || '（記載なし）'}`,
-    `\n【金額に影響する変更（追加見積の対象）】\n${fmt(group('cost_impact'))}`,
+    `\n【${words.briefHeading}】\n${fmt(group('cost_impact'))}`,
     `\n【決定（金額の変更なし）】\n${fmt(group('decision_no_cost'))}`,
     `\n【保留】\n${fmt(group('pending'))}`,
     `\n【認識のズレの可能性】\n${fmt(group('risk'))}`,
@@ -56,18 +58,30 @@ export async function POST(req: Request) {
       summary = '',
       names = [],
       lang = null,
-    }: { items: Item[]; summary: string; names: string[]; lang: string | null } = await req.json();
+      beforeContract = false,
+    }: {
+      items: Item[];
+      summary: string;
+      names: string[];
+      lang: string | null;
+      /** 契約前なら「追加お見積り」ではなく「お見積り」。施主へ出る文書なので効く */
+      beforeContract?: boolean;
+    } = await req.json();
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: '仕分け結果がありません' }, { status: 400 });
     }
 
     // 文書生成でも、ルーターへ出る手前で必ずマスクを通す
-    const brief = toBrief(items, summary);
+    const brief = toBrief(items, summary, beforeContract);
     const { masked, map } = maskPII(brief, names);
 
+    const ownerSystem = beforeContract
+      ? `${OWNER_DOC_SYSTEM}\n\n## この打ち合わせはご契約前です\n見出しは「追加お見積りとなる内容」ではなく「${estimateWords(true).docSection}」にしてください。まだ契約していないので、「追加」という言葉は使わないでください。`
+      : OWNER_DOC_SYSTEM;
+
     const [owner, worker, internal] = await Promise.all([
-      chat({ task: 'doc:owner', system: OWNER_DOC_SYSTEM, user: masked, model: DOC_MODEL }),
+      chat({ task: 'doc:owner', system: ownerSystem, user: masked, model: DOC_MODEL }),
       chat({ task: 'doc:worker', system: WORKER_DOC_SYSTEM, user: masked, model: DOC_MODEL }),
       chat({ task: 'doc:internal', system: INTERNAL_DOC_SYSTEM, user: masked, model: DOC_MODEL }),
     ]);

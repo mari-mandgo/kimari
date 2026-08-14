@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { Item } from '@/app/api/analyze/route';
 import type { TakeoffResponse } from '@/app/api/takeoff/route';
 import { formatCost } from '@/lib/pricing';
+import { estimateWords, isBeforeContract } from '@/lib/phases';
 
 /**
  * 拾い出し。追加見積が必要と判定された項目を、実際の工事項目へ展開する。
@@ -19,6 +20,7 @@ export default function Takeoff({
   canEditRules,
   context,
   phaseLabel,
+  onPhase,
 }: {
   item: Item;
   names: string[];
@@ -29,6 +31,11 @@ export default function Takeoff({
   context?: string;
   /** 画面で段階が指定されていれば、推測させずそれに従わせる */
   phaseLabel?: string;
+  /**
+   * AIが判定した段階を親へ返す。
+   * 段階を選ばずに使ったとき、画面全体の言葉（追加見積／見積）を揃えるために要る。
+   */
+  onPhase?: (week: number | null) => void;
 }) {
   const [res, setRes] = useState<TakeoffResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -81,6 +88,7 @@ export default function Takeoff({
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? '拾い出しに失敗しました');
       setRes(j);
+      onPhase?.(j.phase_week ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -136,6 +144,7 @@ export default function Takeoff({
           template: 'cover',
           title: item.title,
           sourceTitle: item.title,
+          beforeContract: isBeforeContract(phaseLabel || res.phase_week),
           rows: res.work_items.map((w) => ({
             category: w.category,
             name: w.name,
@@ -191,6 +200,8 @@ export default function Takeoff({
   }
 
   const call = res.calls[0];
+  // 契約前は比べる契約が無いので「追加」ではない。AIが判定した段階で言葉を変える
+  const words = estimateWords(isBeforeContract(phaseLabel || res.phase_week));
   // 同じ工種は隣り合っている前提。見出しは切り替わったところにだけ出す
   let lastCategory = '';
 
@@ -214,13 +225,15 @@ export default function Takeoff({
       )}
 
       <div className="flex flex-wrap items-center gap-3">
-        <h4 className="text-[15px] font-bold">追加見積に載せる {res.work_items.length}項目</h4>
+        <h4 className="text-[15px] font-bold">
+          {words.heading} {res.work_items.length}項目
+        </h4>
         <button
           onClick={makeEstimate}
           disabled={making}
           className="min-h-[36px] rounded-lg bg-slate-900 px-3 text-[12px] font-bold text-white disabled:opacity-40"
         >
-          {making ? '作成中…' : '追加見積書をつくる'}
+          {making ? '作成中…' : words.makeButton}
         </button>
         <button
           onClick={copyForExcel}
@@ -236,11 +249,7 @@ export default function Takeoff({
         </button>
       </div>
 
-      <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">
-        <b>もともとの契約に含まれる工事は出していません。</b>
-        出しているのは、この変更がなければ発生しなかった分だけです。
-        金額はAIが出しません（単価は会社ごと・時期ごとに違い、変更工事の見積は書面で提示する必要があるため）。
-      </p>
+      <p className="mt-1.5 text-[12px] leading-relaxed text-slate-500">{words.scopeNote}</p>
 
       <div className="scroll-clean mt-3 overflow-x-auto rounded-xl border border-slate-200">
         <table className="w-full min-w-[540px] text-left text-[13px]">
@@ -286,9 +295,7 @@ export default function Takeoff({
           <summary className="cursor-pointer text-[14px] font-bold">
             もともとの工事に含まれるので外したもの {res.already_included.length}件
           </summary>
-          <p className="mt-1.5 text-[12px] text-slate-500">
-            検討したうえで、追加見積の対象外と判断した項目です。
-          </p>
+          <p className="mt-1.5 text-[12px] text-slate-500">{words.excludedHint}</p>
           <ul className="mt-2 space-y-1.5">
             {res.already_included.map((e, i) => (
               <li key={i} className="text-[13px] leading-relaxed">

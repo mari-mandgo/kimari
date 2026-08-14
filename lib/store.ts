@@ -10,6 +10,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Item } from '@/app/api/analyze/route';
 import type { StoredFile } from './files';
+// 型だけ。実体は読まない（クライアントへ node のモジュールを持ち込まないため）
+import type { CallMeta } from './orca';
 
 const DIR = path.join(process.cwd(), 'data', 'projects');
 
@@ -55,6 +57,22 @@ export type Meeting = {
     workerTranslated?: string;
     lang?: string;
   };
+  /**
+   * ルーターへ実際に送った本文（マスク後）と、そのときの伏せ字の記録。
+   *
+   * あとから見られないと、「何を外へ出したのか」を自分たちで確かめられない。
+   * 音声を外に出さない設計を主張する以上、その場でしか見られないのでは根拠にならない。
+   */
+  sentToRouter?: string;
+  privacy?: { maskedCount: number; tokens: string[]; verified: boolean };
+  /** そのときのモデル・トークン・原価。あとから「この打ち合わせにいくらかかったか」を言える */
+  calls?: CallMeta[];
+  /**
+   * この打ち合わせが工事のどの段階だったか。
+   * 契約の前後で追加見積の意味が変わるので、拾い出しをやり直すときに必要になる。
+   * 現場の phaseWeek は最新の状態を指すため、過去の打ち合わせの再現には使えない。
+   */
+  phaseLabel?: string;
   createdAt: string;
 };
 

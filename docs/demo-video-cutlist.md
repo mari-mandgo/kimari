@@ -1,5 +1,10 @@
 # デモ動画 撮影カットリスト
 
+> **✅ 2026-08-14 内容確定**。提出版マスター＝ `D:\mari\まな式\reels\完成品\KIMARI\KIMARI-demo-submission-master.mp4`（2分57.5秒・1080p・v12）。
+> 制作プロジェクト＝ `D:\mari\まな式\reels\kimari-demo\`（index.html＝最終構成。再編集はここから）。
+> 最終構成：モンタージュ×HeyGenアバター→ロゴ＋タグライン→メリット宣言3カード→デモ（左目次レール・STEP1〜5・中央フラッシュ）→本領HeyGenアバター→数字（スケルトン背景・OrcaRouter表記）→微笑み→ロゴ締め。
+> 残作業：8/15午前にYouTube限定公開→15時までに提出。
+
 更新日: 2026年8月11日
 元資料: demo-video-plan-v2.md（構成）＋ demo-script.md（操作手順）
 収録方式: Playwright自動操作（D:\mari\aihack2026\demo-recording）・1920×1080・無音・シーン別ファイル

@@ -22,6 +22,12 @@ published: false
 
 そして、**私はこのアプリのコードを一行も書いていません。**
 
+### 動いているところ
+
+3分で、録音から追加見積の項目が出るところまで通しています。
+
+https://youtu.be/6HwpSwbsNXw
+
 ---
 
 ## 4人で作りました
@@ -86,6 +92,12 @@ Codexには途中でプロダクト全体を評価してもらいました。
 ---
 
 ## 構成
+
+黒い枠の外へ、音声と個人情報を出さない作りにしています。
+
+![KIMARIの処理の流れ](https://raw.githubusercontent.com/mari-mandgo/kimari/master/docs/architecture.png)
+
+文字で書くとこうです。
 
 ```
 録音（スマホ / PC）

@@ -1,0 +1,160 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KIMARI 配布資料</title>
+<style>
+  /*
+    ブースで審査員に渡すA4・1枚。
+    40チームを1日で見た審査員は必ず混ざるので、
+    手元に残ったときに「あの現場のやつだ」と思い出せることを最優先にした。
+    読ませる資料ではなく、思い出させる資料。
+  */
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 210mm; height: 297mm;
+    padding: 10mm 11mm;
+    font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    color: #0f172a; background: #fff;
+    display: flex; flex-direction: column; gap: 3.5mm;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  /* A4の幅は794px。ここで nowrap を使うと3つの合計が幅を超えて右端が切れる（一度やった） */
+  .head { display: flex; align-items: flex-end; gap: 4mm; border-bottom: 2px solid #0f172a; padding-bottom: 2.5mm; }
+  .logo img { height: 12mm; width: auto; display: block; }
+  .logo { flex: none; }
+  .tag { font-size: 10pt; font-weight: 700; line-height: 1.45; flex: 1; min-width: 0; }
+  .tag small { display: block; font-size: 8pt; font-weight: 400; color: #64748b; }
+  .theme { text-align: right; font-size: 7.5pt; color: #64748b; line-height: 1.5; width: 30mm; flex: none; }
+
+  h2 { font-size: 10.5pt; letter-spacing: .08em; color: #64748b; margin-bottom: 2mm; }
+
+  .lead { display: flex; gap: 5mm; }
+  .lead .box { flex: 1; border: 1px solid #cbd5e1; border-radius: 3mm; padding: 3.5mm 4mm; }
+  .lead .box.ng { border-color: #f97316; background: #fff7ed; }
+  .lead .q { font-size: 10pt; font-weight: 700; line-height: 1.5; }
+  .lead .a { font-size: 8.5pt; margin-top: 1.5mm; line-height: 1.6; color: #334155; }
+  .lead .verdict { font-size: 9pt; font-weight: 800; margin-top: 2mm; }
+  .ng .verdict { color: #c2410c; }
+  .ok .verdict { color: #047857; }
+
+  .point { font-size: 9.5pt; line-height: 1.7; background: #0f172a; color: #fff; padding: 3mm 4mm; border-radius: 3mm; }
+  .point b { color: #fbbf24; }
+
+  .nums { display: flex; gap: 3mm; }
+  .num { flex: 1; border: 1px solid #cbd5e1; border-radius: 3mm; padding: 3mm; text-align: center; }
+  .num .v { font-size: 17pt; font-weight: 800; line-height: 1.1; }
+  .num .u { font-size: 8pt; color: #64748b; margin-top: 1mm; line-height: 1.5; }
+  .num.hi { background: #eff6ff; border-color: #2563eb; }
+  .num.hi .v { color: #1d4ed8; }
+
+  .two { display: flex; gap: 4mm; flex: 1; min-height: 0; }
+  .col { flex: 1; display: flex; flex-direction: column; gap: 2mm; }
+  .card { border: 1px solid #cbd5e1; border-radius: 3mm; padding: 3mm 3.5mm; }
+  .card h3 { font-size: 9pt; margin-bottom: 1.2mm; }
+  .card p, .card li { font-size: 8pt; line-height: 1.6; color: #334155; }
+  .card ul { padding-left: 4mm; }
+  .card .sub { color: #64748b; font-size: 7.5pt; }
+
+  .shot { border: 1px dashed #94a3b8; border-radius: 3mm; flex: 1; display: flex; align-items: center;
+          justify-content: center; color: #94a3b8; font-size: 8pt; text-align: center; line-height: 1.6; }
+  .shot img { width: 100%; height: 100%; object-fit: cover; border-radius: 3mm; }
+
+  .foot { display: flex; gap: 4mm; align-items: center; border-top: 1px solid #cbd5e1; padding-top: 2.5mm; }
+  .qr { text-align: center; }
+  .qr img { width: 18mm; height: 18mm; display: block; }
+  .qr .ph { width: 18mm; height: 18mm; border: 1px dashed #94a3b8; border-radius: 1.5mm;
+            display: flex; align-items: center; justify-content: center; font-size: 7pt; color: #94a3b8; }
+  .qr span { display: block; font-size: 7pt; margin-top: .8mm; color: #475569; white-space: nowrap; }
+  .who { flex: 1; font-size: 8pt; line-height: 1.6; color: #334155; }
+  .who b { font-size: 9pt; }
+  .who .sub { display: block; margin-top: 1mm; color: #64748b; font-size: 7.5pt; }
+</style>
+
+<div class="head">
+  <div class="logo"><img src="logo.png" alt="KIMARI"></div>
+  <div class="tag">
+    話すだけで、現場が決まる。
+    <small>打ち合わせの会話から、<br>追加見積が必要な変更だけを見つけるAIエージェント</small>
+  </div>
+  <div class="theme">
+    AI HACK 2026<br>
+    テーマ「本番で通用する次世代のAI Product」
+  </div>
+</div>
+
+<section>
+  <h2>現場でいちばん揉めるのは、記録が無いことではありません</h2>
+  <div class="lead">
+    <div class="box ng">
+      <div class="q">「キッチン、60センチ寄せられないかな」</div>
+      <div class="a">給排水の移設が発生します。床下の配管をやり直すので追加工事です。<br>施主にはそれが見えていません。</div>
+      <div class="verdict">→ 追加見積が必要</div>
+    </div>
+    <div class="box ok">
+      <div class="q">「建具の色、オークにしたい」</div>
+      <div class="a">同一グレード内の色違いなので、金額は変わりません。</div>
+      <div class="verdict">→ 金額の変更なし</div>
+    </div>
+  </div>
+</section>
+
+<div class="point">
+  どちらも「変更」です。汎用の議事録AIは、この2つを同じ「変更事項」として並べます。<br>
+  建設業では、変更が出たら<b>書面での見積提示が建設業法で義務</b>づけられています。<b>この線引きが本体です。</b>
+</div>
+
+<section>
+  <h2>実測値</h2>
+  <div class="nums">
+    <div class="num hi"><div class="v">0.42円</div><div class="u">打ち合わせ1件<br>（仕分け＋3文書＋翻訳）</div></div>
+    <div class="num hi"><div class="v">270分の1</div><div class="u">最上位モデル直指定<br>35.2円 → 0.13円</div></div>
+    <div class="num"><div class="v">33 → 3</div><div class="u">拾い出しの項目数<br>契約との差分だけに絞る</div></div>
+    <div class="num"><div class="v">0円</div><div class="u">文字起こし<br>自社サーバーで処理</div></div>
+  </div>
+</section>
+
+<div class="two">
+  <div class="col">
+    <div class="card">
+      <h3>音声を外に出さない</h3>
+      <p>録音には施主の氏名・住所・電話がそのまま入ります。文字起こしは<b>自社のサーバーの中だけ</b>で行い、外部の文字起こしサービスへ送りません。</p>
+      <p class="sub" style="margin-top:1.5mm">ルーターへ出るのは、個人情報を伏せたテキストだけ。伏せ漏れがないかを毎回検証しています。<br>
+      ブラウザ内蔵の音声認識は、音声がGoogleへ送られるため<b>機能ごと削除</b>しました。</p>
+    </div>
+    <div class="card">
+      <h3>推測ではなく、その現場の契約書で判定する</h3>
+      <p>当初見積書（Excel）から<b>契約に含まれる工事64項目</b>を読み取り、拾い出しの根拠にします。</p>
+      <p class="sub" style="margin-top:1.5mm">「解体はもう終わっている」「床は元々張り替える契約」——だから追加見積には載せない。外した項目も理由つきで返します。</p>
+    </div>
+    <div class="card">
+      <h3>金額はAIに出させません</h3>
+      <p>単価は会社ごと・時期ごとに違い、変更工事の見積は事業者が書面で提示する責任を負います。出すのは<b>「何を拾うべきか」まで</b>です。</p>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="shot"><!-- SHOT1 -->拾い出しの画面<br>（3項目＋外した6件）<br>のスクリーンショットを入れる</div>
+    <div class="shot"><!-- SHOT2 -->施主ページ<br>のスクリーンショットを入れる</div>
+  </div>
+</div>
+
+<div class="foot">
+  <div class="qr">
+    <img src="qr-article.png" alt="">
+    <span>制作の記事</span>
+  </div>
+  <div class="qr">
+    <img src="qr-video.png" alt="">
+    <span>デモ動画</span>
+  </div>
+  <div class="qr">
+    <img src="qr-repo.png" alt="">
+    <span>ソースコード</span>
+  </div>
+  <div class="who">
+    <b>Mari</b>　建築の設計・施工管理を経て、いまはAIで仕組みをつくっています。<br>
+    このアプリのコードは<b>一行も書いていません</b>。Claude Code・Codex・ChatGPT の3つと組んで作りました。<br>
+    <span class="sub">※ 本物の現場ではまだ運用していません。数字はすべて、実際の録音と実際の見積書で測ったものです。</span>
+  </div>
+</div>
