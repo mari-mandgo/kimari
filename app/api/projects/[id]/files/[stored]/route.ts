@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getProject, saveProject, canAccess } from '@/lib/store';
 import { currentUser } from '@/lib/session';
 import { readFile, deleteFile } from '@/lib/files';
+import { IS_DEMO } from '@/lib/demo';
 
 export const runtime = 'nodejs';
 
@@ -14,7 +15,8 @@ export async function GET(_req: Request, { params }: Ctx) {
 
   const { id, stored } = await params;
   const project = getProject(id);
-  if (!project || !canAccess(project, me.id)) {
+  // デモは誰でも入れる現場を1つだけ置いてある（app/p/[id]/page.tsx と同じ扱い）
+  if (!project || (!IS_DEMO && !canAccess(project, me.id))) {
     return NextResponse.json({ error: '見つかりません' }, { status: 404 });
   }
 
@@ -29,6 +31,10 @@ export async function GET(_req: Request, { params }: Ctx) {
 export async function DELETE(_req: Request, { params }: Ctx) {
   const me = await currentUser();
   if (!me) return NextResponse.json({ error: 'ログインしてください' }, { status: 401 });
+  // デモは書き込まない。消せてしまうと、次に開いた人には無い状態で見える
+  if (IS_DEMO) {
+    return NextResponse.json({ error: 'このデモでは削除できません' }, { status: 403 });
+  }
 
   const { id, stored } = await params;
   const project = getProject(id);

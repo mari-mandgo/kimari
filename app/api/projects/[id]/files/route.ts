@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getProject, saveProject, canAccess } from '@/lib/store';
 import { currentUser } from '@/lib/session';
+import { IS_DEMO } from '@/lib/demo';
 import { saveFile, isAllowed, FILE_KINDS, type FileKind } from '@/lib/files';
 
 export const runtime = 'nodejs';
@@ -16,7 +17,8 @@ export async function POST(req: Request, { params }: Ctx) {
 
   const { id } = await params;
   const project = getProject(id);
-  if (!project || !canAccess(project, me.id)) {
+  // デモは誰でも入れる現場を1つだけ置いてある
+  if (!project || (!IS_DEMO && !canAccess(project, me.id))) {
     return NextResponse.json({ error: '現場が見つかりません' }, { status: 404 });
   }
 

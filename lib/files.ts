@@ -73,15 +73,25 @@ export function readFile(projectId: string, stored: string): { buf: Buffer; mime
   const safe = path.basename(stored);
   const full = path.join(dirFor(projectId), safe);
   if (!fs.existsSync(full)) return null;
+  /*
+    拡張子から種別を決める。
+    ここに無いものを全部 image/jpeg で返していたため、
+    アップロードした見積書（.xlsx）が画像として返り、開けなくなっていた。
+    受け付ける形式（lib/files.ts の ALLOWED）と、この表を必ず揃えること。
+  */
   const ext = path.extname(safe).toLowerCase();
-  const mime =
-    ext === '.png'
-      ? 'image/png'
-      : ext === '.webp'
-        ? 'image/webp'
-        : ext === '.pdf'
-          ? 'application/pdf'
-          : 'image/jpeg';
+  const MIME: Record<string, string> = {
+    '.png': 'image/png',
+    '.webp': 'image/webp',
+    '.heic': 'image/heic',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.pdf': 'application/pdf',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.xls': 'application/vnd.ms-excel',
+  };
+  // 分からないものは、ブラウザに解釈させず保存させる
+  const mime = MIME[ext] ?? 'application/octet-stream';
   return { buf: fs.readFileSync(full), mime };
 }
 

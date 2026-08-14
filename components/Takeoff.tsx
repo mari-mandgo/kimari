@@ -22,6 +22,7 @@ export default function Takeoff({
   phaseLabel,
   onPhase,
   autoRun = true,
+  initial,
 }: {
   item: Item;
   names: string[];
@@ -43,8 +44,13 @@ export default function Takeoff({
    * デモでは押した人の意思で1回だけ動かす。
    */
   autoRun?: boolean;
+  /**
+   * 保存済みの拾い出し。あればこれを出し、LLMは呼ばない。
+   * 同じ入力から同じ結果を出し直すためだけに、毎回お金と時間をかけない。
+   */
+  initial?: TakeoffResponse | null;
 }) {
-  const [res, setRes] = useState<TakeoffResponse | null>(null);
+  const [res, setRes] = useState<TakeoffResponse | null>(initial ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -67,7 +73,8 @@ export default function Takeoff({
    * どのみち押される処理なので、原価も増えない。
    */
   useEffect(() => {
-    if (!autoRun || started.current) return;
+    // 保存済みがあるなら呼ばない
+    if (initial || !autoRun || started.current) return;
     started.current = true;
     setAhead(true);
     run().finally(() => setAhead(false));

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currentUser } from '@/lib/session';
+import { IS_DEMO } from '@/lib/demo';
 import { getProject, saveProject, canAccess, type Estimate, type EstimateRow } from '@/lib/store';
 
 export const runtime = 'nodejs';
@@ -17,7 +18,8 @@ async function guard(id: string) {
   if (!me) return { error: 'ログインが必要です', status: 401 as const };
   const project = getProject(id);
   if (!project) return { error: '現場が見つかりません', status: 404 as const };
-  if (!canAccess(project, me.id)) return { error: '権限がありません', status: 403 as const };
+  // デモは誰でも入れる現場を1つだけ置いてある。書き込みは各所で別途断る
+  if (!IS_DEMO && !canAccess(project, me.id)) return { error: '権限がありません', status: 403 as const };
   return { me, project };
 }
 

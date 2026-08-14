@@ -3,6 +3,7 @@ import { currentUser } from '@/lib/session';
 import { getProject, canAccess } from '@/lib/store';
 import { getCompany } from '@/lib/companies';
 import EstimateEditor from '@/components/EstimateEditor';
+import { IS_DEMO } from '@/lib/demo';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,8 @@ export default async function EstimatePage({
   if (!me) redirect('/login');
 
   const project = getProject(id);
-  if (!project || !canAccess(project, me.id)) notFound();
+  // デモは誰でも入れる現場を1つだけ置いてある（app/p/[id]/page.tsx と同じ扱い）
+  if (!project || (!IS_DEMO && !canAccess(project, me.id))) notFound();
 
   const estimate = (project.estimates ?? []).find((e) => e.id === eid);
   if (!estimate) notFound();

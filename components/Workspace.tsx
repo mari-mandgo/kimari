@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AnalyzeResponse, Item } from '@/app/api/analyze/route';
 import type { DocumentsResponse } from '@/app/api/documents/route';
+import type { TakeoffResponse } from '@/app/api/takeoff/route';
 import { SAMPLE_TRANSCRIPT, SAMPLE_NAMES } from '@/lib/sample';
 import { formatCost } from '@/lib/pricing';
 import type { Meeting, Project } from '@/lib/store';
@@ -286,6 +287,16 @@ export default function Workspace({
   const demoMeeting =
     [...project.meetings].sort((a, b) => b.date.localeCompare(a.date)).find((m) => m.documents?.owner) ??
     project.meetings[0];
+
+  /**
+   * 保存済みの拾い出し。開いている打ち合わせのものだけを見る。
+   * 同じ入力から同じ結果を出し直すために、毎回お金と時間をかけない。
+   */
+  function savedTakeoff(title: string): TakeoffResponse | null {
+    if (!meetingId) return null;
+    const m = project.meetings.find((x) => x.id === meetingId);
+    return (m?.takeoffs?.[title] as TakeoffResponse | undefined) ?? null;
+  }
 
   const grouped = (c: Item['category']) => res?.items.filter((i) => i.category === c) ?? [];
   const allCalls = [...(res?.calls ?? []), ...(docs?.calls ?? [])];
@@ -711,6 +722,7 @@ export default function Workspace({
                               phaseLabel={phaseLabel}
                               onPhase={setDetectedWeek}
                               autoRun={!isDemo}
+                              initial={savedTakeoff(it.title)}
                             />
                           )}
                         </article>
