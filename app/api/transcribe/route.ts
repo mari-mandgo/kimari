@@ -7,7 +7,12 @@ import { currentUser } from '@/lib/session';
 import { IS_DEMO } from '@/lib/demo';
 
 export const runtime = 'nodejs';
-export const maxDuration = 600;
+/*
+  ホスティング先の上限が300秒なので、それに合わせる。
+  実測では8分16秒の音声が約2分半なので、この範囲で足りる。
+  なお公開デモでは、この処理自体を動かさない（下で501を返す）。
+*/
+export const maxDuration = 300;
 
 const TMP = path.join(process.cwd(), 'data', 'tmp');
 const PYTHON = path.join(process.cwd(), '.venv', 'Scripts', 'python.exe');

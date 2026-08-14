@@ -49,3 +49,6 @@ next-env.d.ts
 # ローカルの文字起こし用（Python）
 /.venv/
 /models/
+
+.vercel
+.env*
