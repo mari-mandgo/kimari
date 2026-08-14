@@ -49,7 +49,7 @@ export default function LandingPage() {
           <a href="#story">施主との共有</a>
           <a href="#technology">AI・安全性</a>
         </nav>
-        <Link className={styles.headerCta} href="/login">デモを体験する</Link>
+        <Link className={styles.headerCta} href="/demo">デモを体験する</Link>
       </header>
 
       <section className={styles.hero}>
@@ -60,7 +60,7 @@ export default function LandingPage() {
             <h1>話すだけで、<br /><span>現場が決まる。</span></h1>
             <p className={styles.lead}>打ち合わせから追加見積まで。<br />会話を、次の仕事に変えるリノベAIエージェント。</p>
             <div className={styles.heroActions}>
-              <Link className={styles.primaryCta} href="/login">KIMARIを体験する <span>→</span></Link>
+              <Link className={styles.primaryCta} href="/demo">KIMARIを体験する <span>→</span></Link>
               <a className={styles.textLink} href="#value">できることを見る ↓</a>
             </div>
             <div className={styles.trustLine}>
@@ -110,6 +110,24 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* 動いているところを、読む前に見てもらう */}
+      <section className={styles.videoSection}>
+        <p className={styles.eyebrow}>DEMO</p>
+        <h2>3分で、ひととおり動きます。</h2>
+        <p>
+          録音から、追加見積が必要な変更の抽出、工事項目の拾い出し、施主ページへの共有まで。
+          実際の打ち合わせを録って通しています。
+        </p>
+        <div className={styles.videoFrame}>
+          <iframe
+            src="https://www.youtube.com/embed/6HwpSwbsNXw"
+            title="KIMARI デモ動画"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      </section>
+
       <section id="value" className={styles.valueSection}>
         <div className={styles.sectionHead}>
           <p className={styles.eyebrow}>HOW IT WORKS</p>
@@ -156,7 +174,7 @@ export default function LandingPage() {
         </div>
         <div className={styles.storyBrowser}>
           <div className={styles.browserBar}><i /><i /><i /><span>kimari.app/story/my-renovation</span></div>
-          <Image src="/kimari-story.png" alt="KIMARIの施主向けプロジェクトストーリー画面" width={1536} height={1024} />
+          <Image src="/shots/owner-lp.png" alt="KIMARIの施主向けページ（実際の画面）" width={1440} height={940} />
         </div>
         <div className={styles.timeline}>
           {timeline.map(([no, title, sub]) => <div key={no}><b>{no}</b><span>{title}<small>{sub}</small></span></div>)}
@@ -198,7 +216,7 @@ export default function LandingPage() {
         <p>RENOVATION AI AGENT</p>
         <h2>話すだけで、<br />現場が決まる。</h2>
         <p className={styles.finalLead}>会話が決定に変わる。決定が見積もりに変わる。<br />そして、家づくりのすべてが施主に届く。</p>
-        <Link className={styles.finalButton} href="/login">KIMARIのデモを体験する <span>→</span></Link>
+        <Link className={styles.finalButton} href="/demo">KIMARIのデモを体験する <span>→</span></Link>
       </section>
 
       <footer className={styles.footer}>
