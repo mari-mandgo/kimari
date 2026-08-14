@@ -1,3 +1,7 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+
 /**
  * 公開デモであることを、全ページの一番上に出す。
  *
@@ -6,14 +10,20 @@
  * 何を押しても保存されない。**それが分からないまま触られるのが一番まずい。**
  *
  * 隠せるようにはしない。読んで消せる注意書きは、消えたあとに効かなくなる。
- *
- * スクロールしても残す。上に戻らないと確認できない注意書きは、
+ * スクロールしても残す。上に戻らないと読めない注意書きは、
  * 途中から見た人には無いのと同じになる。
+ *
+ * ただし **LP には出さない**。LPは製品の紹介ページで、
+ * 触って動かす画面ではないため、断る対象がない。
+ *
  * 高さは 32px で固定し、その分だけ画面側のヘッダーを下げる
  * （app/layout.tsx の --app-top と components/AppShell.tsx）。
  * 折り返して高さが変わると、下のヘッダーとの位置がずれる。
  */
 export default function DemoBanner() {
+  const pathname = usePathname();
+  if (pathname?.startsWith('/lp')) return null;
+
   return (
     <div className="sticky top-0 z-40 h-8 w-full overflow-hidden bg-amber-400 text-slate-900">
       <div className="mx-auto flex h-8 max-w-[1200px] items-center gap-2 px-4">

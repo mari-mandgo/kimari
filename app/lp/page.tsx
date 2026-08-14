@@ -174,7 +174,7 @@ export default function LandingPage() {
         </div>
         <div className={styles.storyBrowser}>
           <div className={styles.browserBar}><i /><i /><i /><span>kimari.app/story/my-renovation</span></div>
-          <Image src="/shots/owner-lp.png" alt="KIMARIの施主向けページ（実際の画面）" width={1440} height={940} />
+          <Image src="/shots/owner-lp.png" alt="KIMARIの施主向けページ（実際の画面）" width={1440} height={908} />
         </div>
         <div className={styles.timeline}>
           {timeline.map(([no, title, sub]) => <div key={no}><b>{no}</b><span>{title}<small>{sub}</small></span></div>)}
