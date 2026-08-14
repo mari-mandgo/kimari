@@ -16,9 +16,12 @@ import { SAMPLE_TRANSCRIPT, SAMPLE_NAMES } from '@/lib/sample';
 export default function DemoRecorder({
   onTranscript,
   onNames,
+  onOpenSaved,
 }: {
   onTranscript: (text: string) => void;
   onNames: (names: string) => void;
+  /** この録音を仕分けた結果（保存済み）をそのまま開く */
+  onOpenSaved?: () => void;
 }) {
   const [filled, setFilled] = useState(false);
 
@@ -36,29 +39,51 @@ export default function DemoRecorder({
         お使いのブラウザは音声の再生に対応していません。
       </audio>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3">
+      {/*
+        既に仕分けた結果を出すのを主にする。
+        その場でAIを動かすと50〜80秒かかり、見ている人は待たされる。
+        鍵はこちらの持ち出しなので、誰でも押せる入口に無制限の実行を置かない意味もある。
+      */}
+      <div className="mt-4">
+        <button
+          onClick={onOpenSaved}
+          className="min-h-[52px] w-full rounded-xl bg-slate-900 px-5 text-[16px] font-bold text-white sm:w-auto"
+        >
+          この打ち合わせを仕分けた結果を見る
+        </button>
+        <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
+          この音声を実際に仕分けた結果です。<b>抽出9件・所要82秒・原価0.18円</b>で出たものを、
+          そのまま保存してあります。追加見積が必要な項目には拾い出しが付いていて、
+          3つの文書（施主向け・職人向け・社内保存用）とベトナム語訳も入っています。
+        </p>
+      </div>
+
+      <details className="mt-4 rounded-xl border border-slate-200 p-4">
+        <summary className="cursor-pointer text-[13px] font-bold">
+          その場でAIを動かしてみる（50〜80秒かかります）
+        </summary>
+        <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
+          文字起こしを本文欄に入れて、自分で「仕分ける」を押せます。
+          入るのは、この音声をサーバー上の faster-whisper にかけて出てきた文字起こしそのもので、
+          誤認識も直していません（「建具」が「縦側」、「食洗機」が「特選期」になっています）。
+          <b>それでも仕分けが文脈から復元します。</b>
+        </p>
         <button
           onClick={() => {
             onTranscript(SAMPLE_TRANSCRIPT);
             onNames(SAMPLE_NAMES);
             setFilled(true);
           }}
-          className="min-h-[48px] rounded-xl bg-slate-900 px-5 text-[15px] font-bold text-white"
+          className="mt-3 min-h-[44px] rounded-xl border-2 border-slate-900 px-4 text-[14px] font-bold text-slate-900"
         >
-          {filled ? '入れ直す' : 'この録音の文字起こしを入れる'}
+          {filled ? '入れ直す' : '文字起こしを本文欄に入れる'}
         </button>
         {filled && (
-          <span className="text-[13px] font-bold text-emerald-700">
+          <p className="mt-2 text-[13px] font-bold text-emerald-700">
             入りました。下の「仕分ける」を押してください
-          </span>
+          </p>
         )}
-      </div>
-
-      <p className="mt-3 text-[12px] leading-relaxed text-slate-500">
-        入るのは、この音声をサーバー上の faster-whisper にかけて出てきた文字起こしそのものです。
-        誤認識も直していません（「建具」が「縦側」、「食洗機」が「特選期」になっています）。
-        <b>そこから先も動きます。</b>
-      </p>
+      </details>
     </section>
   );
 }

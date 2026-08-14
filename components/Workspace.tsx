@@ -278,6 +278,15 @@ export default function Workspace({
   const beforeContract = isBeforeContract(phaseLabel || detectedWeek);
   const words = estimateWords(beforeContract);
 
+  /**
+   * デモで開く打ち合わせ。
+   * 置いてある録音を仕分けた結果そのもので、3つの文書まで入っている分を選ぶ。
+   * その場でAIを動かすと50〜80秒待たせるので、こちらを主にする。
+   */
+  const demoMeeting =
+    [...project.meetings].sort((a, b) => b.date.localeCompare(a.date)).find((m) => m.documents?.owner) ??
+    project.meetings[0];
+
   const grouped = (c: Item['category']) => res?.items.filter((i) => i.category === c) ?? [];
   const allCalls = [...(res?.calls ?? []), ...(docs?.calls ?? [])];
   const totalCost = allCalls.length
@@ -432,7 +441,11 @@ export default function Workspace({
 
             <div className="mb-6">
               {isDemo ? (
-                <DemoRecorder onTranscript={setTranscript} onNames={setNames} />
+                <DemoRecorder
+                  onTranscript={setTranscript}
+                  onNames={setNames}
+                  onOpenSaved={() => demoMeeting && openMeeting(demoMeeting)}
+                />
               ) : (
                 <Recorder onTranscript={(text) => setTranscript(text)} />
               )}
@@ -503,7 +516,11 @@ export default function Workspace({
         {/* 公開デモには文字起こし用のサーバーが無い。動かないボタンを置かず、音声を聴ける形にする */}
         <div className="mb-6">
           {isDemo ? (
-            <DemoRecorder onTranscript={setTranscript} onNames={setNames} />
+            <DemoRecorder
+              onTranscript={setTranscript}
+              onNames={setNames}
+              onOpenSaved={() => demoMeeting && openMeeting(demoMeeting)}
+            />
           ) : (
             <Recorder onTranscript={(text) => setTranscript(text)} />
           )}
@@ -701,6 +718,7 @@ export default function Workspace({
                               context={res?.summary}
                               phaseLabel={phaseLabel}
                               onPhase={setDetectedWeek}
+                              autoRun={!isDemo}
                             />
                           )}
                         </article>

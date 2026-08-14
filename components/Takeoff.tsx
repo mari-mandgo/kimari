@@ -21,6 +21,7 @@ export default function Takeoff({
   context,
   phaseLabel,
   onPhase,
+  autoRun = true,
 }: {
   item: Item;
   names: string[];
@@ -36,6 +37,12 @@ export default function Takeoff({
    * 段階を選ばずに使ったとき、画面全体の言葉（追加見積／見積）を揃えるために要る。
    */
   onPhase?: (week: number | null) => void;
+  /**
+   * 押される前に走らせておくか。
+   * 公開デモでは false にする。開くたびに項目数だけLLMが動いてしまうため。
+   * デモでは押した人の意思で1回だけ動かす。
+   */
+  autoRun?: boolean;
 }) {
   const [res, setRes] = useState<TakeoffResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,7 +67,7 @@ export default function Takeoff({
    * どのみち押される処理なので、原価も増えない。
    */
   useEffect(() => {
-    if (started.current) return;
+    if (!autoRun || started.current) return;
     started.current = true;
     setAhead(true);
     run().finally(() => setAhead(false));

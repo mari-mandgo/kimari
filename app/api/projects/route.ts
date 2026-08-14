@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { listProjects, createProject, findByInviteCode, joinProject } from '@/lib/store';
 import { currentUser } from '@/lib/session';
+import { IS_DEMO } from '@/lib/demo';
 
 export const runtime = 'nodejs';
 
@@ -13,6 +14,14 @@ export async function GET() {
 export async function POST(req: Request) {
   const me = await currentUser();
   if (!me) return NextResponse.json({ error: 'ログインしてください' }, { status: 401 });
+
+  // 画面から隠すだけでは直接叩けてしまうので、ここでも断る
+  if (IS_DEMO) {
+    return NextResponse.json(
+      { error: 'このデモでは現場を作れません（保存を行わないため）' },
+      { status: 403 }
+    );
+  }
 
   const body = await req.json();
 

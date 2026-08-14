@@ -12,11 +12,18 @@ export default function ProjectList({
   me,
   initialProjects,
   companyCode,
+  isDemo = false,
 }: {
   me: PublicUser;
   initialProjects: ProjectSummary[];
   /** 同僚を会社に招くためのコード。会社に属している人にだけ出す */
   companyCode?: string;
+  /**
+   * 公開デモか。
+   * デモは保存しないので、現場を作らせると「作れたのに次で消える」ことになる。
+   * 押せるのに結果が残らないボタンは、壊れているのと同じなので出さない。
+   */
+  isDemo?: boolean;
 }) {
   const router = useRouter();
   // 一覧はサーバーから受け取る。JSが動かない端末でも表示されるように
@@ -97,7 +104,25 @@ export default function ProjectList({
           </section>
         )}
 
+        {/* デモは保存しないので、作る・参加するは出さない。押せて結果が残らないボタンは壊れているのと同じ */}
+        {isDemo && (
+          <section className="mb-4 rounded-2xl border-2 border-slate-900 bg-white p-5 shadow-sm">
+            <h2 className="text-[15px] font-bold">下の現場を開いてください</h2>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
+              実際の打ち合わせを4回分入れてあります。
+              <b>「打ち合わせ」タブ</b>を開き、
+              <b>「この録音の文字起こしを入れる」→「仕分ける」</b>の順に押すと、
+              録音から追加見積の項目が出るまでを試せます。
+            </p>
+            <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
+              保存済みの打ち合わせは「開く」を押すと、仕分けの結果・3つの文書・拾い出しがそのまま出ます
+              （こちらはAIを動かさないので待ち時間がありません）。
+            </p>
+          </section>
+        )}
+
         {/* 職人は招待コードで現場に入る */}
+        {!isDemo && (
         <section className="mb-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-[15px] font-bold">招待コードで参加する</h2>
           <div className="mt-3 flex gap-2">
@@ -118,7 +143,9 @@ export default function ProjectList({
           </div>
           {joinError && <p className="mt-2 text-[13px] text-rose-700">{joinError}</p>}
         </section>
+        )}
 
+        {!isDemo && (
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <h2 className="text-[15px] font-bold">現場を追加する</h2>
           <input
@@ -141,6 +168,7 @@ export default function ProjectList({
             {creating ? '作成中…' : 'この現場を作る'}
           </button>
         </section>
+        )}
 
         <section className="mt-8">
           <h2 className="mb-3 text-[15px] font-bold">現場の一覧</h2>
