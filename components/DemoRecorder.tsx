@@ -1,8 +1,3 @@
-'use client';
-
-import { useState } from 'react';
-import { SAMPLE_TRANSCRIPT, SAMPLE_NAMES } from '@/lib/sample';
-
 /**
  * 公開デモでの、録音の代わり。
  *
@@ -14,17 +9,11 @@ import { SAMPLE_TRANSCRIPT, SAMPLE_NAMES } from '@/lib/sample';
  * デモ動画でも同じものを使っている。実案件の録音は載せていない。
  */
 export default function DemoRecorder({
-  onTranscript,
-  onNames,
   onOpenSaved,
 }: {
-  onTranscript: (text: string) => void;
-  onNames: (names: string) => void;
   /** この録音を仕分けた結果（保存済み）をそのまま開く */
   onOpenSaved?: () => void;
 }) {
-  const [filled, setFilled] = useState(false);
-
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <h2 className="text-[15px] font-bold">打ち合わせの音声</h2>
@@ -58,32 +47,12 @@ export default function DemoRecorder({
         </p>
       </div>
 
-      <details className="mt-4 rounded-xl border border-slate-200 p-4">
-        <summary className="cursor-pointer text-[13px] font-bold">
-          その場でAIを動かしてみる（50〜80秒かかります）
-        </summary>
-        <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
-          文字起こしを本文欄に入れて、自分で「仕分ける」を押せます。
-          入るのは、この音声をサーバー上の faster-whisper にかけて出てきた文字起こしそのもので、
-          誤認識も直していません（「建具」が「縦側」、「食洗機」が「特選期」になっています）。
-          <b>それでも仕分けが文脈から復元します。</b>
-        </p>
-        <button
-          onClick={() => {
-            onTranscript(SAMPLE_TRANSCRIPT);
-            onNames(SAMPLE_NAMES);
-            setFilled(true);
-          }}
-          className="mt-3 min-h-[44px] rounded-xl border-2 border-slate-900 px-4 text-[14px] font-bold text-slate-900"
-        >
-          {filled ? '入れ直す' : '文字起こしを本文欄に入れる'}
-        </button>
-        {filled && (
-          <p className="mt-2 text-[13px] font-bold text-emerald-700">
-            入りました。下の「仕分ける」を押してください
-          </p>
-        )}
-      </details>
+      {/*
+        以前ここに「その場でAIを動かす」を置いていたが、外した。
+        押すと下の本文欄にテキストが入るだけで、画面の上では何も起きたように見えず、
+        壊れていると受け取られる。動いたかどうかが分からないボタンは置かない。
+        自分の打ち合わせで試したい人は、下の本文欄に貼って「仕分ける」を押せる。
+      */}
     </section>
   );
 }

@@ -441,11 +441,7 @@ export default function Workspace({
 
             <div className="mb-6">
               {isDemo ? (
-                <DemoRecorder
-                  onTranscript={setTranscript}
-                  onNames={setNames}
-                  onOpenSaved={() => demoMeeting && openMeeting(demoMeeting)}
-                />
+                <DemoRecorder onOpenSaved={() => demoMeeting && openMeeting(demoMeeting)} />
               ) : (
                 <Recorder onTranscript={(text) => setTranscript(text)} />
               )}
@@ -516,11 +512,7 @@ export default function Workspace({
         {/* 公開デモには文字起こし用のサーバーが無い。動かないボタンを置かず、音声を聴ける形にする */}
         <div className="mb-6">
           {isDemo ? (
-            <DemoRecorder
-              onTranscript={setTranscript}
-              onNames={setNames}
-              onOpenSaved={() => demoMeeting && openMeeting(demoMeeting)}
-            />
+            <DemoRecorder onOpenSaved={() => demoMeeting && openMeeting(demoMeeting)} />
           ) : (
             <Recorder onTranscript={(text) => setTranscript(text)} />
           )}
