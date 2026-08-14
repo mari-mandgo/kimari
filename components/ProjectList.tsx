@@ -109,14 +109,14 @@ export default function ProjectList({
           <section className="mb-4 rounded-2xl border-2 border-slate-900 bg-white p-5 shadow-sm">
             <h2 className="text-[15px] font-bold">下の現場を開いてください</h2>
             <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
-              実際の打ち合わせを4回分入れてあります。
+              契約前の打ち合わせ4回と、解体後の打ち合わせ1回を入れてあります。
               <b>「打ち合わせ」タブ</b>を開き、
-              <b>「この録音の文字起こしを入れる」→「仕分ける」</b>の順に押すと、
-              録音から追加見積の項目が出るまでを試せます。
+              <b>「この打ち合わせを仕分けた結果を見る」</b>を押してください。
+              解体後の回で実際に録った音声も聴けます。
             </p>
             <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
-              保存済みの打ち合わせは「開く」を押すと、仕分けの結果・3つの文書・拾い出しがそのまま出ます
-              （こちらはAIを動かさないので待ち時間がありません）。
+              仕分けの結果・3つの文書・拾い出し（現地で確認すること・注意点）が、そのまま出ます。
+              一度出した結果を保存してあるので、待ち時間はありません。
             </p>
           </section>
         )}
