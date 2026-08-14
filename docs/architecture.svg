@@ -1,100 +1,95 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 760" width="1080" height="760" font-family="Hiragino Sans, Yu Gothic, Meiryo, sans-serif">
-  <rect width="1080" height="760" fill="#FAF9F7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 1880" width="760" height="1880" font-family="Hiragino Sans, Yu Gothic, Meiryo, sans-serif">
+  <!--
+    記事に貼る図。
+    横長にすると、記事の本文幅（約700px）まで縮められて文字が読めなくなる。
+    幅を760pxに抑えて縦に積むことで、表示されるときもほぼ原寸のまま読める。
+  -->
+  <rect width="760" height="1880" fill="#FAF9F7"/>
 
-  <text x="32" y="42" font-size="20" font-weight="bold" fill="#0f172a">KIMARI の処理の流れ</text>
-  <text x="32" y="66" font-size="13" fill="#64748b">音声と個人情報は、黒い枠の外へ出さない</text>
+  <text x="32" y="48" font-size="26" font-weight="bold" fill="#0f172a">KIMARI の処理の流れ</text>
+  <text x="32" y="80" font-size="16" fill="#64748b">音声と個人情報は、黒い枠の外へ出さない</text>
 
-  <!-- ===== 自社サーバー ===== -->
-  <rect x="32" y="86" width="600" height="470" rx="14" fill="#ffffff" stroke="#0f172a" stroke-width="2"/>
-  <text x="52" y="116" font-size="15" font-weight="bold" fill="#0f172a">自社のサーバー</text>
+  <!-- ===== 自社サーバー（前半） ===== -->
+  <rect x="24" y="104" width="712" height="646" rx="16" fill="#ffffff" stroke="#0f172a" stroke-width="2.5"/>
+  <text x="48" y="140" font-size="19" font-weight="bold" fill="#0f172a">自社のサーバー</text>
 
-  <!-- ① 録音 -->
-  <rect x="52" y="132" width="256" height="80" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/>
-  <text x="70" y="159" font-size="15" font-weight="bold" fill="#0f172a">① 録音</text>
-  <text x="70" y="182" font-size="12" fill="#475569">スマホ / PC・MediaRecorder</text>
-  <text x="70" y="201" font-size="12" fill="#94a3b8">氏名・住所・電話が生で入る</text>
+  <rect x="48" y="156" width="664" height="96" rx="12" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="70" y="188" font-size="18" font-weight="bold" fill="#0f172a">① 録音</text>
+  <text x="70" y="216" font-size="15" fill="#475569">スマホ / PC（MediaRecorder）</text>
+  <text x="70" y="240" font-size="14" fill="#94a3b8">氏名・住所・電話が生のまま入る</text>
 
-  <!-- ② 文字起こし -->
-  <rect x="356" y="132" width="256" height="80" rx="10" fill="#f1f5f9" stroke="#cbd5e1"/>
-  <text x="374" y="159" font-size="15" font-weight="bold" fill="#0f172a">② 文字起こし</text>
-  <text x="374" y="182" font-size="12" fill="#475569">faster-whisper（small）</text>
-  <text x="374" y="201" font-size="12" fill="#94a3b8">処理後に音声は削除</text>
+  <path d="M380 252 L380 284" stroke="#0f172a" stroke-width="2.5" marker-end="url(#a)"/>
 
-  <path d="M310 172 L352 172" stroke="#0f172a" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="48" y="290" width="664" height="96" rx="12" fill="#f1f5f9" stroke="#cbd5e1"/>
+  <text x="70" y="322" font-size="18" font-weight="bold" fill="#0f172a">② 文字起こし</text>
+  <text x="70" y="350" font-size="15" fill="#475569">faster-whisper を、このサーバーの中だけで動かす</text>
+  <text x="70" y="374" font-size="14" fill="#94a3b8">処理が終わったら音声は消す</text>
 
-  <!-- ③ マスク -->
-  <rect x="52" y="240" width="560" height="86" rx="10" fill="#fff7ed" stroke="#f97316" stroke-width="2"/>
-  <text x="70" y="267" font-size="15" font-weight="bold" fill="#9a3412">③ 個人情報のマスク</text>
-  <text x="70" y="290" font-size="12" fill="#7c2d12">氏名・電話・郵便番号・住所 →［NAME_1］［TEL_1］へ置換</text>
-  <text x="70" y="311" font-size="12" fill="#c2410c">外へ出る経路は必ずここを通す。伏せ漏れを毎回検証。復元はサーバー内だけ</text>
+  <path d="M380 386 L380 418" stroke="#0f172a" stroke-width="2.5" marker-end="url(#a)"/>
 
-  <path d="M332 216 L332 236" stroke="#0f172a" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="48" y="424" width="664" height="130" rx="12" fill="#fff7ed" stroke="#f97316" stroke-width="2.5"/>
+  <text x="70" y="456" font-size="18" font-weight="bold" fill="#9a3412">③ 個人情報のマスク</text>
+  <text x="70" y="486" font-size="15" fill="#7c2d12">氏名・電話・郵便番号・住所 →［NAME_1］［TEL_1］へ置換</text>
+  <text x="70" y="512" font-size="15" fill="#c2410c">外へ出る経路は必ずここを通す。伏せ漏れを毎回検証する</text>
+  <text x="70" y="536" font-size="14" fill="#c2410c">元に戻すのは、このサーバーの中だけ</text>
 
-  <!-- ④ 事実 -->
-  <rect x="52" y="356" width="256" height="180" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
-  <text x="70" y="383" font-size="15" font-weight="bold" fill="#0f172a">④ この現場の事実</text>
-  <text x="70" y="409" font-size="12" fill="#475569">・当初見積書から読んだ</text>
-  <text x="82" y="428" font-size="12" fill="#475569">　契約範囲（Excel）</text>
-  <text x="70" y="452" font-size="12" fill="#475569">・工事の段階（契約の前後）</text>
-  <text x="70" y="476" font-size="12" fill="#475569">・会社ごとの補正ルール</text>
-  <text x="70" y="506" font-size="12" fill="#94a3b8">推測をやめ、事実で判定する</text>
-  <text x="70" y="524" font-size="12" fill="#94a3b8">ための材料</text>
+  <path d="M380 554 L380 586" stroke="#0f172a" stroke-width="2.5" marker-end="url(#a)"/>
 
-  <!-- ⑦ 保存と共有 -->
-  <rect x="356" y="356" width="256" height="180" rx="10" fill="#f8fafc" stroke="#cbd5e1"/>
-  <text x="374" y="383" font-size="15" font-weight="bold" fill="#0f172a">⑦ 保存と共有</text>
-  <text x="374" y="409" font-size="12" fill="#475569">・現場データ（JSON）</text>
-  <text x="374" y="433" font-size="12" fill="#475569">・施主ページ（ログイン不要）</text>
-  <text x="374" y="457" font-size="12" fill="#475569">・追加見積書（印刷 / PDF）</text>
-  <text x="374" y="487" font-size="12" fill="#94a3b8">金額欄は空のまま。</text>
-  <text x="374" y="505" font-size="12" fill="#94a3b8">数量と単価は人が入れる</text>
+  <rect x="48" y="592" width="664" height="140" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="70" y="624" font-size="18" font-weight="bold" fill="#0f172a">④ この現場の事実（一緒に渡す材料）</text>
+  <text x="70" y="654" font-size="15" fill="#475569">・当初見積書から読み取った契約範囲（Excel・64項目）</text>
+  <text x="70" y="680" font-size="15" fill="#475569">・工事の段階（契約の前か後か）</text>
+  <text x="70" y="706" font-size="15" fill="#475569">・会社ごとの補正ルール</text>
 
-  <path d="M180 330 L180 352" stroke="#0f172a" stroke-width="2" marker-end="url(#a)"/>
-  <path d="M484 330 L484 352" stroke="#0f172a" stroke-width="2" marker-end="url(#a)"/>
+  <!-- 自社サーバー → OrcaRouter -->
+  <path d="M380 750 L380 800" stroke="#2563eb" stroke-width="2.5" marker-end="url(#b)"/>
+  <text x="396" y="782" font-size="15" font-weight="bold" fill="#2563eb">マスク後のテキストだけが出ていく</text>
 
   <!-- ===== OrcaRouter ===== -->
-  <rect x="712" y="86" width="336" height="470" rx="14" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
-  <text x="732" y="116" font-size="15" font-weight="bold" fill="#1e3a8a">OrcaRouter（OpenAI互換）</text>
+  <rect x="24" y="806" width="712" height="586" rx="16" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+  <text x="48" y="842" font-size="19" font-weight="bold" fill="#1e3a8a">OrcaRouter（OpenAI互換）</text>
 
-  <rect x="732" y="132" width="296" height="86" rx="10" fill="#ffffff" stroke="#93c5fd"/>
-  <text x="750" y="158" font-size="14" font-weight="bold" fill="#1e3a8a">⑤ 仕分け</text>
-  <text x="750" y="179" font-size="12" fill="#1d4ed8">追加見積が必要 / 決定 / 保留 /</text>
-  <text x="750" y="196" font-size="12" fill="#1d4ed8">認識のズレ</text>
-  <text x="750" y="212" font-size="11" fill="#60a5fa">fusion-flash・9件を82秒・0.18円</text>
+  <rect x="48" y="858" width="664" height="110" rx="12" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="70" y="890" font-size="18" font-weight="bold" fill="#1e3a8a">⑤ 仕分け</text>
+  <text x="70" y="920" font-size="15" fill="#1d4ed8">追加見積が必要 / 決定 / 保留 / 認識のズレ に分ける</text>
+  <text x="70" y="946" font-size="14" fill="#60a5fa">fusion-flash・9件を82秒・0.18円</text>
 
-  <rect x="732" y="234" width="296" height="104" rx="10" fill="#ffffff" stroke="#93c5fd"/>
-  <text x="750" y="260" font-size="14" font-weight="bold" fill="#1e3a8a">⑥ 拾い出し</text>
-  <text x="750" y="281" font-size="12" fill="#1d4ed8">④を渡して「元の契約との差分」</text>
-  <text x="750" y="298" font-size="12" fill="#1d4ed8">だけを出す</text>
-  <text x="750" y="315" font-size="12" fill="#1d4ed8">外した項目は理由つきで別枠へ</text>
-  <text x="750" y="332" font-size="11" fill="#60a5fa">解体確認なら3項目・32秒・0.09円</text>
+  <rect x="48" y="984" width="664" height="136" rx="12" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="70" y="1016" font-size="18" font-weight="bold" fill="#1e3a8a">⑥ 拾い出し</text>
+  <text x="70" y="1046" font-size="15" fill="#1d4ed8">④を渡して「元の契約との差分」だけを出す</text>
+  <text x="70" y="1072" font-size="15" fill="#1d4ed8">外した項目は、理由つきで別枠へ</text>
+  <text x="70" y="1098" font-size="14" fill="#60a5fa">解体確認なら3項目・32秒・0.09円</text>
 
-  <rect x="732" y="354" width="296" height="86" rx="10" fill="#ffffff" stroke="#93c5fd"/>
-  <text x="750" y="380" font-size="14" font-weight="bold" fill="#1e3a8a">3つの文書＋翻訳</text>
-  <text x="750" y="401" font-size="12" fill="#1d4ed8">施主向け / 職人向け / 社内保存用</text>
-  <text x="750" y="418" font-size="12" fill="#1d4ed8">宛先ごとに金額と個人情報を</text>
-  <text x="750" y="434" font-size="12" fill="#1d4ed8">出し分ける</text>
+  <rect x="48" y="1136" width="664" height="110" rx="12" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="70" y="1168" font-size="18" font-weight="bold" fill="#1e3a8a">⑦ 3つの文書＋翻訳</text>
+  <text x="70" y="1198" font-size="15" fill="#1d4ed8">施主向け / 職人向け / 社内保存用</text>
+  <text x="70" y="1224" font-size="15" fill="#1d4ed8">宛先ごとに、金額と個人情報を出し分ける</text>
 
-  <rect x="732" y="456" width="296" height="80" rx="10" fill="#ffffff" stroke="#93c5fd"/>
-  <text x="750" y="482" font-size="14" font-weight="bold" fill="#1e3a8a">全リクエストを記録</text>
-  <text x="750" y="503" font-size="12" fill="#1d4ed8">実モデル・トークン・所要・原価</text>
-  <text x="750" y="522" font-size="11" fill="#60a5fa">だから原価が言える</text>
+  <rect x="48" y="1262" width="664" height="106" rx="12" fill="#ffffff" stroke="#93c5fd"/>
+  <text x="70" y="1294" font-size="18" font-weight="bold" fill="#1e3a8a">⑧ 全リクエストを記録</text>
+  <text x="70" y="1324" font-size="15" fill="#1d4ed8">実際に使われたモデル・トークン・所要・原価</text>
+  <text x="70" y="1350" font-size="14" fill="#60a5fa">だから原価が言える</text>
 
-  <!-- 往復 -->
-  <path d="M616 268 L708 268" stroke="#2563eb" stroke-width="2" marker-end="url(#b)"/>
-  <text x="662" y="258" font-size="11" fill="#2563eb" text-anchor="middle">マスク後の</text>
-  <text x="662" y="246" font-size="11" fill="#2563eb" text-anchor="middle">テキストだけ</text>
-  <path d="M708 300 L616 300" stroke="#2563eb" stroke-width="2" marker-end="url(#b)"/>
-  <text x="662" y="316" font-size="11" fill="#2563eb" text-anchor="middle">JSON</text>
-  <text x="662" y="330" font-size="11" fill="#2563eb" text-anchor="middle">（崩れても拾う）</text>
+  <!-- OrcaRouter → 自社サーバー -->
+  <path d="M380 1392 L380 1442" stroke="#2563eb" stroke-width="2.5" marker-end="url(#b)"/>
+  <text x="396" y="1424" font-size="15" font-weight="bold" fill="#2563eb">JSON（崩れても拾う）</text>
+
+  <!-- ===== 自社サーバー（後半） ===== -->
+  <rect x="24" y="1448" width="712" height="176" rx="16" fill="#ffffff" stroke="#0f172a" stroke-width="2.5"/>
+  <text x="48" y="1484" font-size="19" font-weight="bold" fill="#0f172a">自社のサーバー</text>
+
+  <rect x="48" y="1500" width="664" height="106" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text x="70" y="1532" font-size="18" font-weight="bold" fill="#0f172a">⑨ 保存と共有</text>
+  <text x="70" y="1562" font-size="15" fill="#475569">現場データ / 施主ページ（ログイン不要）/ 追加見積書</text>
+  <text x="70" y="1588" font-size="14" fill="#94a3b8">金額欄は空のまま。数量と単価は人が入れる</text>
 
   <!-- ===== 崩れたときの備え ===== -->
-  <rect x="32" y="580" width="1016" height="150" rx="14" fill="#ffffff" stroke="#cbd5e1"/>
-  <text x="52" y="608" font-size="15" font-weight="bold" fill="#0f172a">崩れたときの備え</text>
-  <text x="52" y="636" font-size="12.5" fill="#334155">・JSONがコードブロックで囲まれて返っても拾う（最初の { から最後の } まで）</text>
-  <text x="52" y="659" font-size="12.5" fill="#334155">・工事の段階が読めないときは推測せず「ご契約」に倒し、判断した理由を必ず返させる</text>
-  <text x="52" y="682" font-size="12.5" fill="#334155">・文字起こしの誤り（建具→縦側／食洗機→特選期）は、仕分けが文脈から復元する</text>
-  <text x="52" y="705" font-size="12.5" fill="#334155">・会社ごとの補正は会社コードで閉じる。名前では突き合わせない（同名の別会社が混ざるため）</text>
+  <rect x="24" y="1652" width="712" height="196" rx="16" fill="#ffffff" stroke="#cbd5e1"/>
+  <text x="48" y="1688" font-size="19" font-weight="bold" fill="#0f172a">崩れたときの備え</text>
+  <text x="48" y="1722" font-size="15" fill="#334155">・JSONがコードブロックで囲まれて返っても拾う</text>
+  <text x="48" y="1754" font-size="15" fill="#334155">・段階が読めないときは推測せず「ご契約」に倒し、理由を必ず返させる</text>
+  <text x="48" y="1786" font-size="15" fill="#334155">・文字起こしの誤り（建具→縦側）は、仕分けが文脈から復元する</text>
+  <text x="48" y="1818" font-size="15" fill="#334155">・会社ごとの補正は会社コードで閉じる。名前では突き合わせない</text>
 
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
