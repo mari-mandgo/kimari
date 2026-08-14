@@ -1,0 +1,266 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>KIMARI｜AI HACK 2026 最終プレゼン</title>
+<style>
+  /*
+    ステージでの4分。会場の後ろの席から読めることを最優先にした。
+    ・1枚に文は3行まで。読ませるものではなく、話の支えにする
+    ・数字は大きく出す。声で言った数字は、耳では残らない
+    ・暗い会場のプロジェクタを想定して、濃紺に白抜き
+    矢印キー / スペース / クリックで進む。Fでフルスクリーン。
+  */
+  :root {
+    --navy: #0b1220;
+    --line: #24354f;
+    --blue: #60a5fa;
+    --amber: #fbbf24;
+    --rose: #fb7185;
+    --mute: #93a4bd;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #000; color: #fff; overflow: hidden;
+    font-family: "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  /* 会場のスクリーンは16:9。画面比が違っても中央に収める */
+  #stage {
+    position: absolute; inset: 0; display: grid; place-items: center;
+  }
+  .slide {
+    position: absolute; width: 1280px; height: 720px;
+    background: var(--navy); color: #fff;
+    padding: 64px 76px; display: none; flex-direction: column;
+    transform-origin: center center;
+  }
+  .slide.on { display: flex; }
+
+  h1 { font-size: 84px; line-height: 1.15; letter-spacing: -.02em; }
+  h2 { font-size: 46px; line-height: 1.3; letter-spacing: -.01em; }
+  .kicker {
+    font-size: 20px; font-weight: 800; letter-spacing: .16em; color: var(--blue);
+    margin-bottom: 18px;
+  }
+  .lead { font-size: 27px; line-height: 1.75; color: #dbe6f5; }
+  .mute { color: var(--mute); }
+  .grow { flex: 1; }
+  .foot {
+    display: flex; align-items: center; gap: 16px;
+    font-size: 17px; color: var(--mute); border-top: 1px solid var(--line); padding-top: 18px;
+  }
+  .foot img { height: 26px; opacity: .85; }
+
+  /* 2つの発言 */
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 30px; }
+  .card { border: 2px solid var(--line); border-radius: 18px; padding: 30px 32px; }
+  .card.ng { border-color: #f97316; background: #f973161a; }
+  .card.ok { border-color: #34d399; background: #34d3991a; }
+  .card .q { font-size: 31px; font-weight: 800; line-height: 1.45; }
+  .card .a { font-size: 20px; line-height: 1.7; color: #cbd8e8; margin-top: 16px; }
+  .card .v { font-size: 26px; font-weight: 900; margin-top: 20px; }
+  .ng .v { color: #fb923c; }
+  .ok .v { color: #34d399; }
+
+  /* 数字 */
+  .nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-top: 34px; }
+  .num { border: 2px solid var(--line); border-radius: 18px; padding: 26px; text-align: center; }
+  .num.hi { border-color: var(--blue); background: #60a5fa14; }
+  .num b { display: block; font-size: 62px; line-height: 1; letter-spacing: -.03em; }
+  .num.hi b { color: var(--blue); }
+  .num span { display: block; font-size: 18px; color: var(--mute); margin-top: 14px; line-height: 1.6; }
+
+  /* 工程の比較 */
+  .cmp { display: grid; grid-template-columns: 1fr 90px 1fr; align-items: center; gap: 20px; margin-top: 34px; }
+  .cmp .box { border: 2px solid var(--line); border-radius: 18px; padding: 28px; text-align: center; }
+  .cmp .box.now { border-color: var(--amber); background: #fbbf2414; }
+  .cmp .box .t { font-size: 20px; color: var(--mute); }
+  .cmp .box .n { font-size: 76px; font-weight: 900; line-height: 1.1; letter-spacing: -.03em; }
+  .cmp .box.now .n { color: var(--amber); }
+  .cmp .box .s { font-size: 18px; color: var(--mute); }
+  .cmp .arrow { font-size: 44px; text-align: center; color: var(--mute); }
+
+  .point { font-size: 25px; line-height: 1.7; background: #ffffff12; border-left: 6px solid var(--amber);
+           border-radius: 0 14px 14px 0; padding: 22px 26px; margin-top: 30px; }
+  .point b { color: var(--amber); }
+
+  ul.bul { margin-top: 26px; }
+  ul.bul li { list-style: none; font-size: 25px; line-height: 1.55; margin-bottom: 18px; padding-left: 34px; position: relative; }
+  ul.bul li:before { content: ""; position: absolute; left: 0; top: 14px; width: 16px; height: 3px; background: var(--blue); }
+  ul.bul li small { display: block; font-size: 19px; color: var(--mute); margin-top: 6px; }
+
+  .shot { flex: 1; display: grid; place-items: center; margin-top: 24px; min-height: 0; }
+  .shot img { max-width: 100%; max-height: 100%; border-radius: 12px; }
+
+  .cover { justify-content: center; align-items: center; text-align: center; }
+  .cover .tag { font-size: 30px; color: #cbd8e8; margin-top: 26px; }
+  .cover img { height: 58px; margin-bottom: 40px; }
+  .cover .who { font-size: 21px; color: var(--mute); margin-top: 54px; }
+
+  #hud {
+    position: fixed; right: 18px; bottom: 14px; font-size: 15px; color: #64748b;
+    font-variant-numeric: tabular-nums; z-index: 10;
+  }
+</style>
+
+<div id="stage">
+
+  <!-- 1 ─ 表紙 15秒 -->
+  <section class="slide cover on">
+    <img src="logo.png" alt="KIMARI">
+    <h1>話すだけで、<br>現場が決まる。</h1>
+    <p class="tag">打ち合わせの会話から、追加見積が必要な変更だけを見つける</p>
+    <p class="who">AI HACK 2026 ／ Mari（金子麻里）／ 建築設計・施工管理 20年</p>
+  </section>
+
+  <!-- 2 ─ 課題 35秒 -->
+  <section class="slide">
+    <p class="kicker">現場でいちばん揉めるのは、記録が無いことではありません</p>
+    <h2>お金が動く変更に、<br>双方が気づいていないことです。</h2>
+    <div class="two">
+      <div class="card ng">
+        <p class="q">「キッチン、60センチ<br>寄せられないかな」</p>
+        <p class="a">給排水の移設が発生します。<br>床下の配管をやり直します。</p>
+        <p class="v">→ 追加見積が必要</p>
+      </div>
+      <div class="card ok">
+        <p class="q">「建具の色、<br>オークにしたい」</p>
+        <p class="a">同一グレード内の色違いです。<br>金額は変わりません。</p>
+        <p class="v">→ 金額の変更なし</p>
+      </div>
+    </div>
+    <div class="grow"></div>
+    <div class="foot"><img src="logo.png" alt=""><span>施主には、その違いが見えていません</span></div>
+  </section>
+
+  <!-- 3 ─ 必然性 25秒 -->
+  <section class="slide">
+    <p class="kicker">議事録アプリでは解けません</p>
+    <h2>どちらも「変更」です。<br>汎用のAIは、同じ欄に並べます。</h2>
+    <div class="point">
+      建設業では、変更が出たら<b>書面での見積提示が建設業法で義務</b>づけられています。<br>
+      <b>この線引きが、このプロダクトの本体です。</b>
+    </div>
+    <p class="lead" style="margin-top:30px">
+      文字起こしでも要約でもなく、<br>
+      <b style="color:#fff">会話を、次に必要な行動へ変えること</b>を作りました。
+    </p>
+    <div class="grow"></div>
+    <div class="foot"><img src="logo.png" alt=""><span>KIMARI は議事録を作りません</span></div>
+  </section>
+
+  <!-- 4 ─ デモ 45秒 -->
+  <section class="slide">
+    <p class="kicker">DEMO</p>
+    <h2>録音から、追加見積の項目まで。</h2>
+    <div class="shot"><img src="owner.png" alt="施主ページ"></div>
+    <div class="foot"><img src="logo.png" alt=""><span>施主は共有リンクを開くだけ。打ち合わせのたびに、ここへ積み上がります</span></div>
+  </section>
+
+  <!-- 5 ─ 作り込み 40秒 -->
+  <section class="slide">
+    <p class="kicker">ここが、実務者にしか作れなかった部分です</p>
+    <h2>同じ発言でも、工程で出力が変わります。</h2>
+    <div class="cmp">
+      <div class="box">
+        <p class="t">見積提出（契約前）</p>
+        <p class="n">16</p>
+        <p class="s">項目 ／ 51秒</p>
+      </div>
+      <div class="arrow">→</div>
+      <div class="box now">
+        <p class="t">解体確認（契約後）</p>
+        <p class="n">3</p>
+        <p class="s">項目 ／ 32秒</p>
+      </div>
+    </div>
+    <div class="point" style="margin-top:26px">
+      契約後は、<b>当初見積書（Excel）から読んだ契約64項目</b>と突き合わせ、
+      <b>その変更がなければ発生しなかった分だけ</b>を出します。外した項目も理由つきで返します。
+    </div>
+    <div class="grow"></div>
+    <div class="foot"><img src="logo.png" alt=""><span>推測ではなく、その現場の契約書で判定する</span></div>
+  </section>
+
+  <!-- 6 ─ セキュリティ 25秒 -->
+  <section class="slide">
+    <p class="kicker">SECURITY</p>
+    <h2>音声を、外に出しません。</h2>
+    <ul class="bul">
+      <li>録音には施主の氏名・住所・電話がそのまま入ります
+        <small>文字起こしは自社のサーバーの中だけ。外部の文字起こしサービスへ送りません</small></li>
+      <li>ルーターへ出るのは、個人情報を伏せたテキストだけ
+        <small>伏せ漏れがないかを毎回検証しています</small></li>
+      <li>ブラウザ内蔵の音声認識は、機能ごと削除しました
+        <small>音声がGoogleへ送られるため、この説明と両立しないからです</small></li>
+    </ul>
+    <div class="grow"></div>
+    <div class="foot"><img src="logo.png" alt=""><span>できないことは、できないと返します</span></div>
+  </section>
+
+  <!-- 7 ─ コスト 20秒 -->
+  <section class="slide">
+    <p class="kicker">LLM COST ／ すべて実測値です</p>
+    <h2>1件、0.42円。</h2>
+    <div class="nums">
+      <div class="num hi"><b>0.42円</b><span>打ち合わせ1件<br>仕分け＋3文書＋翻訳</span></div>
+      <div class="num hi"><b>270<small style="font-size:34px">分の1</small></b><span>最上位モデル直指定<br>35.2円 → 0.13円</span></div>
+      <div class="num"><b>0円</b><span>文字起こし<br>自社サーバーで処理</span></div>
+    </div>
+    <div class="point" style="margin-top:28px">
+      OrcaRouterで<b>定型の仕分けは安いモデル、含みのある会話だけ高いモデル</b>に振り分け。
+      実際に使われたモデルを毎回記録しているので、<b>原価を推定ではなく実測で言えます</b>。
+    </div>
+    <div class="grow"></div>
+    <div class="foot"><img src="logo.png" alt=""><span>追加見積3件の判定は、全モードで一致しました</span></div>
+  </section>
+
+  <!-- 8 ─ ビジネスとこれから 25秒 -->
+  <section class="slide">
+    <p class="kicker">BUSINESS ／ NEXT</p>
+    <h2>記録を作る人が払い、<br>読む人は無料です。</h2>
+    <ul class="bul">
+      <li>困っているのは、あとから追加請求を説明する側（設計・工務店）
+        <small>一人親方 月1,980円／工務店 月9,800円。原価は月30件で12.6円</small></li>
+      <li>職人が現場で録って送る経路は、無料のまま
+        <small>施主が職人へ直接言う一言が、最も揉めます。ここを塞ぐのが本体です</small></li>
+      <li>本物の現場では、まだ運用していません
+        <small>数字はすべて、実際の録音と実際の見積書で測ったものです</small></li>
+    </ul>
+    <div class="grow"></div>
+    <div class="foot"><img src="logo.png" alt=""><span>話すだけで、現場が決まる。</span></div>
+  </section>
+
+</div>
+
+<div id="hud"></div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  let i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('on', k === i));
+    hud.textContent = (i + 1) + ' / ' + slides.length;
+  }
+
+  // 会場のスクリーンに合わせて拡大縮小する。1280x720 を基準に、はみ出さない倍率へ
+  function fit() {
+    const r = Math.min(innerWidth / 1280, innerHeight / 720);
+    slides.forEach((s) => (s.style.transform = 'scale(' + r + ')'));
+  }
+
+  addEventListener('resize', fit);
+  addEventListener('keydown', (e) => {
+    if (['ArrowRight', ' ', 'PageDown', 'Enter'].includes(e.key)) { e.preventDefault(); show(i + 1); }
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); show(i - 1); }
+    if (e.key === 'Home') show(0);
+    if (e.key === 'End') show(slides.length - 1);
+    if (e.key.toLowerCase() === 'f') document.documentElement.requestFullscreen?.();
+  });
+  addEventListener('click', () => show(i + 1));
+
+  fit();
+  show(0);
+</script>
