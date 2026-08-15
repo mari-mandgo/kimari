@@ -42,6 +42,29 @@
   }
   .card:last-child { page-break-after: auto; }
 
+  .frontCard { padding: 0; display: block; }
+  .frontPhoto {
+    position: absolute; right: 0; top: 0; width: 39%; height: 100%;
+    object-fit: cover; object-position: 52% 38%;
+  }
+  .frontFade {
+    position: absolute; right: 34%; top: 0; width: 15%; height: 100%;
+    background: linear-gradient(90deg, #fff 12%, rgba(255,255,255,0));
+  }
+  .frontContent {
+    position: relative; z-index: 2; width: 66%; height: 100%;
+    padding: 7.5mm 7mm 7mm 9mm;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .frontAccent {
+    position: absolute; left: 0; bottom: 0; width: 39%; height: 1.8mm;
+    background: var(--teal);
+  }
+  .frontAccent::after {
+    content: ""; position: absolute; left: 100%; top: 0;
+    width: 34%; height: 100%; background: var(--pink);
+  }
+
   /* 塗り足し領域に届かせる色面。断裁がずれても白フチが出ない */
   .bleedBar {
     position: absolute; left: 0; top: 0; width: 100%; height: 2.2mm;
@@ -77,34 +100,46 @@
   .qr { text-align: center; flex: none; }
   .qr img { width: 15mm; height: 15mm; display: block; }
   .qr span { display: block; font-size: 5.6pt; color: var(--sub); margin-top: 0.8mm; letter-spacing: .06em; }
+
+  .backCard {
+    background: #fff url("back.png") center/cover no-repeat;
+  }
+  .backCard::after {
+    content: ""; position: absolute; inset: 0;
+    background: rgba(255,255,255,.22); pointer-events: none;
+  }
+  .backCard > * { position: relative; z-index: 1; }
+  .eyebrow { font-size: 5.8pt; letter-spacing: .18em; color: var(--teal); font-weight: 700; margin-bottom: 1.5mm; }
 </style>
 
 <!-- ═══════════ 表 ═══════════ -->
-<div class="card">
-  <div class="bleedBar"></div>
-
-  <div class="logo">
-    <img src="logo-mgo.png" alt="M&amp;GO">
-    <p class="brandSub">株式会社M&amp;Go</p>
-  </div>
-
-  <div class="nameBlock">
-    <p class="role">代表取締役</p>
-    <p class="name">金子　麻里</p>
-    <p class="nameEn">MARI KANEKO</p>
-  </div>
-
-  <div class="frontFoot">
-    〒151-0071　東京都渋谷区本町2-39-17<br>
-    m-go.asia
+<div class="card frontCard">
+  <img class="frontPhoto" src="profile-card.png" alt="金子麻里">
+  <div class="frontFade"></div>
+  <div class="frontAccent"></div>
+  <div class="frontContent">
+    <div class="logo">
+      <img src="logo-mgo.png" alt="M&amp;GO">
+      <p class="brandSub">AI × DESIGN × AUTOMATION</p>
+    </div>
+    <div class="nameBlock">
+      <p class="role">株式会社M&amp;Go　代表取締役</p>
+      <p class="name">金子　麻里</p>
+      <p class="nameEn">MARI KANEKO</p>
+    </div>
+    <div class="frontFoot">
+      〒151-0071　東京都渋谷区本町2-39-17<br>
+      m-go.asia
+    </div>
   </div>
 </div>
 
 <!-- ═══════════ 裏 ═══════════ -->
-<div class="card">
+<div class="card backCard">
   <div class="bleedBar"></div>
 
   <div>
+    <p class="eyebrow">AI × 仕組み化</p>
     <p class="lead">AIと話すだけで、<br><span class="hl">仕事が進む</span>仕組みをつくっています。</p>
     <p class="leadSub">SNS運用の自動化 ／ 業務のAI化 ／ 仕組みづくりの伴走</p>
   </div>
