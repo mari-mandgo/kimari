@@ -101,6 +101,55 @@
     position: fixed; right: 18px; bottom: 14px; font-size: 15px; color: #64748b;
     font-variant-numeric: tabular-nums; z-index: 10;
   }
+
+  /* LPと同じ、白・淡いブルー・ネイビーのプレゼンテーマ */
+  .slide { background:#f7faff; color:#101828; padding:58px 76px; }
+  .slide:before { content:""; position:absolute; inset:0; pointer-events:none; background-image:linear-gradient(rgba(17,104,216,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(17,104,216,.035) 1px,transparent 1px); background-size:48px 48px; }
+  .slide > * { position:relative; z-index:1; }
+  .kicker { color:#1168d8; font-size:22px; }
+  h1 { color:#06265a; }
+  h2 { color:#101828; }
+  .lead { color:#40516a; }
+  .mute,.foot { color:#65758a; }
+  .foot { border-top-color:#d8e2ef; }
+  .foot img { opacity:1; filter:none; }
+  .cover { background:linear-gradient(135deg,#fff 0%,#edf5ff 68%,#dbeaff 100%); }
+  .cover:after { content:""; position:absolute; width:500px; height:500px; border-radius:50%; right:-150px; top:-200px; background:#b9d8ff; filter:blur(40px); opacity:.55; }
+  .cover img { height:68px; }
+  .cover .tag { color:#40516a; }
+  .cover .who { color:#64748b; }
+  .card { background:#fff; box-shadow:0 16px 38px #102a4b0d; }
+  .card .a { color:#52647a; }
+  .point { background:#fff; box-shadow:0 14px 34px #102a4b0c; }
+  .num,.cmp .box { background:#fff; box-shadow:0 15px 36px #102a4b0d; }
+  .num span,.cmp .box .t,.cmp .box .s { color:#65758a; }
+  .num b,.cmp .box .n { color:#06265a; }
+  .shot img { box-shadow:0 20px 50px #102a4b1a; border:1px solid #dbe4ef; }
+  .slide:nth-child(3),.slide:nth-child(6) { background:linear-gradient(135deg,#082655,#061a38); color:#fff; }
+  .slide:nth-child(3):before,.slide:nth-child(6):before { background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); }
+  .slide:nth-child(3) h2,.slide:nth-child(6) h2 { color:#fff; }
+  .slide:nth-child(3) .kicker,.slide:nth-child(6) .kicker { color:#86bdff; }
+  .slide:nth-child(3) .point { color:#101828; }
+  .slide:nth-child(3) .lead { color:#dbe7f6; }
+  .slide:nth-child(3) .foot,.slide:nth-child(6) .foot { color:#9fb1c8; border-top-color:#29476e; }
+  .slide:nth-child(3) .foot img,.slide:nth-child(6) .foot img { filter:brightness(0) invert(1); opacity:.9; }
+  .slide:nth-child(6) ul.bul li small { color:#b8c9dd; }
+  .slide:nth-child(6) ul.bul li:before { background:#72aef7; }
+  .slide:nth-child(5) { background:linear-gradient(150deg,#f8fbff,#e7f1ff); }
+  .slide:nth-child(5) .cmp .box.now { background:#fff8e7; box-shadow:0 18px 40px #b6780018; }
+  .slide:nth-child(7) .num.hi { background:#edf6ff; }
+  .slide:nth-child(8) { background:linear-gradient(155deg,#fff,#eef5ff); }
+  /* 写真を使い、隣り合うスライドのシルエットを変える */
+  .cover{align-items:flex-start;text-align:left;padding-left:90px;padding-right:650px;background:#f6f9ff}
+  .cover:before{background:linear-gradient(90deg,#f6f9ff 0%,#f6f9ff 43%,rgba(246,249,255,.82) 53%,rgba(246,249,255,.08) 72%),url("../../public/story/06.jpg") right center/58% 100% no-repeat}
+  .cover:after{display:none}.cover h1{font-size:80px}.cover .tag{font-size:26px;line-height:1.55}.cover .who{margin-top:42px}
+  .card:before{content:"";display:block;height:118px;margin:-30px -32px 24px;border-radius:16px 16px 0 0;background-position:center;background-size:cover}
+  .card.ng:before{background-image:linear-gradient(#0b234922,#0b234922),url("../../public/story/01.jpg")}
+  .card.ok:before{background-image:url("../../public/story/02.jpg")}
+  .shot{flex:0 0 425px;height:425px;overflow:hidden;margin-top:18px}
+  .shot img{display:block;width:100%;height:100%;max-width:none;max-height:none;object-fit:contain;object-position:center}
+  .securityLayout{display:grid;grid-template-columns:1.15fr .85fr;gap:34px;align-items:stretch;margin-top:22px;min-height:0}
+  .securityLayout ul.bul{margin-top:0}.securityPhoto{width:100%;height:100%;min-height:385px;object-fit:cover;border-radius:16px;box-shadow:0 20px 48px #0004;border:1px solid #ffffff22}
 </style>
 
 <div id="stage">
@@ -138,7 +187,7 @@
     <p class="kicker">議事録アプリでは解けません</p>
     <h2>どちらも「変更」です。<br>汎用のAIは、同じ欄に並べます。</h2>
     <div class="point">
-      建設業では、変更が出たら<b>書面での見積提示が建設業法で義務</b>づけられています。<br>
+      追加・変更工事では、着工前に<b>適正な見積手続きと書面による変更契約</b>が必要です。<br>
       <b>この線引きが、このプロダクトの本体です。</b>
     </div>
     <p class="lead" style="margin-top:30px">
@@ -186,14 +235,17 @@
   <section class="slide">
     <p class="kicker">SECURITY</p>
     <h2>音声を、外に出しません。</h2>
-    <ul class="bul">
-      <li>録音には施主の氏名・住所・電話がそのまま入ります
-        <small>文字起こしは自社のサーバーの中だけ。外部の文字起こしサービスへ送りません</small></li>
-      <li>ルーターへ出るのは、個人情報を伏せたテキストだけ
-        <small>伏せ漏れがないかを毎回検証しています</small></li>
-      <li>ブラウザ内蔵の音声認識は、機能ごと削除しました
-        <small>音声がGoogleへ送られるため、この説明と両立しないからです</small></li>
-    </ul>
+    <div class="securityLayout">
+      <ul class="bul">
+        <li>録音には施主の氏名・住所・電話がそのまま入ります
+          <small>文字起こしは自社のサーバーの中だけ。外部の文字起こしサービスへ送りません</small></li>
+        <li>ルーターへ出るのは、個人情報を伏せたテキストだけ
+          <small>伏せ漏れがないかを毎回検証しています</small></li>
+        <li>ブラウザ内蔵の音声認識は、機能ごと削除しました
+          <small>音声がGoogleへ送られるため、この説明と両立しないからです</small></li>
+      </ul>
+      <img class="securityPhoto" src="../../public/story/05.jpg" alt="軽鉄下地と配線が見える施工中の現場">
+    </div>
     <div class="grow"></div>
     <div class="foot"><img src="logo.png" alt=""><span>できないことは、できないと返します</span></div>
   </section>

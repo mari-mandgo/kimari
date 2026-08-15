@@ -48,6 +48,7 @@ export default function LandingPage() {
           <a href="#value">できること</a>
           <a href="#story">施主との共有</a>
           <a href="#technology">AI・安全性</a>
+          <a href="#pricing">料金</a>
         </nav>
         <Link className={styles.headerCta} href="/demo">デモを体験する</Link>
       </header>
@@ -209,6 +210,55 @@ export default function LandingPage() {
         <div className={styles.productionLine}>
           <span>会話</span><i>→</i><span>個人情報保護</span><i>→</i><span>最適モデル選択</span><i>→</i><span>根拠つき提案</span><i>→</i><span>人が承認</span><i>→</i><span>施主へ共有</span>
         </div>
+      </section>
+
+      <section id="pricing" className={styles.pricingSection}>
+        <div className={styles.sectionHead}>
+          <p className={styles.eyebrow}>PRICING</p>
+          <h2>記録を作る人が払い、<br />読む人は無料です。</h2>
+          <p>追加見積の漏れを防ぎたい設計・工務店が利用料を負担。施主と職人には、情報を届けるための入口を無料で開きます。</p>
+        </div>
+        <div className={styles.pricingGrid}>
+          <article className={styles.pricePlan}>
+            <p className={styles.planFor}>施主・職人</p>
+            <h3>共有・現場参加</h3>
+            <p className={styles.price}><strong>0</strong><span>円／月</span></p>
+            <p className={styles.planLead}>読む人、現場から届ける人は無料。</p>
+            <ul>
+              <li>施主ページの閲覧</li>
+              <li>記録にひも付けて質問</li>
+              <li>職人による現場録音・送信</li>
+            </ul>
+          </article>
+          <article className={`${styles.pricePlan} ${styles.recommended}`}>
+            <p className={styles.planBadge}>個人で使う</p>
+            <p className={styles.planFor}>一人親方・個人設計</p>
+            <h3>パーソナル</h3>
+            <p className={styles.price}><strong>1,980</strong><span>円／月</span></p>
+            <p className={styles.planLead}>打ち合わせを、追加見積までつなぐ。</p>
+            <ul>
+              <li>音声の文字起こし・自動仕分け</li>
+              <li>追加見積項目の拾い出し</li>
+              <li>3種類の文書と施主ページ</li>
+            </ul>
+          </article>
+          <article className={styles.pricePlan}>
+            <p className={styles.planFor}>工務店・設計事務所</p>
+            <h3>チーム</h3>
+            <p className={styles.price}><strong>9,800</strong><span>円／月</span></p>
+            <p className={styles.planLead}>5名まで、同じ判断基準で運用。</p>
+            <ul>
+              <li>パーソナルの全機能</li>
+              <li>会社ごとの判定ルール</li>
+              <li>役割に応じた修正権限</li>
+            </ul>
+          </article>
+        </div>
+        <div className={styles.pricingProof}>
+          <span>AI処理原価</span><strong>1打ち合わせ 0.42円</strong><i />
+          <span>月30件なら</span><strong>12.6円</strong><small>実測値をもとに算出</small>
+        </div>
+        <p className={styles.pricingNote}>※ 正式提供前の予定価格です。AI処理原価には、サーバーなどの運用費は含みません。</p>
       </section>
 
       <section className={styles.finalCta}>

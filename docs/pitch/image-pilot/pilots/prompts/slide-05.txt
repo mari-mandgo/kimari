@@ -1,0 +1,32 @@
+Create one complete premium Japanese presentation slide image for KIMARI, slide 05, exact 16:9 landscape. All visible text is baked into the image.
+
+Use the supplied estimate-document image on the left and the supplied skeleton-apartment construction image on the right. Use the supplied KIMARI logo only as a subtle brand reference; do not invent or distort it.
+
+Story: the same spoken request produces a different, contract-aware result depending on project phase. This is the dramatic proof slide and must communicate “33 items becomes 3 items” instantly.
+
+Composition:
+- Bright white and very pale blue architectural editorial background, large safe margins.
+- Small eyebrow/headline area across the top.
+- Main comparison occupies the middle: left panel is the estimate document, right panel is the skeleton renovation site, joined by a crisp horizontal directional line or arrow.
+- On the left make “33” extremely large in deep navy/blue, with “項目” beside it and “51秒” nearby.
+- On the right make “3” extremely large in warm orange, with “項目” beside it and “32秒” nearby.
+- Bottom band contains three concise reasoning statements, readable at venue distance. Use restrained blueprint/grid accents only.
+- Visual style: production-grade B2B AI product, architectural, trustworthy, premium, high contrast. No generic dashboard cards, no sci-fi glow.
+
+Color palette: white #FFFFFF, pale blue #EDF5FF, deep navy #06265A, KIMARI blue #1168D8. Warm orange #F28C28 only for the narrowed added-estimate result and directional emphasis.
+
+Visible text, verbatim and no other text:
+“ここが、実務者にしか作れなかった部分です”
+“同じ発言でも、工程で出力が変わります。”
+“見積提出（契約前）”
+“33項目”
+“51秒”
+“解体確認（契約後）”
+“3項目”
+“32秒”
+“当初見積書（Excel）から読んだ契約64項目と突き合わせる”
+“その変更がなければ発生しなかった分だけを出す”
+“外した項目も理由つきで返す”
+“推測ではなく、その現場の契約書で判定する”
+
+Typography: modern Japanese gothic. Strong hierarchy. Exact Japanese spelling and punctuation. Ensure every required string is readable and spelled exactly. Do not add, omit, paraphrase, duplicate, or invent any text or numbers. Do not add people. Do not fabricate table rows or document contents. No watermark, no slide number.

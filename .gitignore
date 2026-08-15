@@ -52,3 +52,7 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# 作業中の一時置き場（配布物や下書きが混ざるため、追跡しない）
+/tmp/
+_preview.png

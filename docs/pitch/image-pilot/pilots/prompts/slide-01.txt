@@ -1,0 +1,17 @@
+Use case: productivity-visual
+Asset type: complete 16:9 presentation slide image, original slide 01 cover
+Input images: Image 1 is the KIMARI logo reference; Image 2 is the finished renovation interior photography reference.
+Primary request: Create one finished premium Japanese presentation cover slide for KIMARI. All visible text must be part of the image.
+Visual concept: credible renovation product, architectural editorial photography, production-ready AI, aligned with a clean white and pale-blue SaaS landing page.
+Composition: exact 16:9 landscape. Asymmetric split. Left 52% is clean pale white-blue space for text. Right 48% uses the supplied completed renovation room as a full-height editorial photograph with a soft white-to-photo transition. Add only very restrained blueprint grid lines. Large safe margins.
+Color palette: white #FFFFFF, pale blue #EDF5FF, deep navy #06265A, KIMARI blue #1168D8. No orange on this cover.
+Typography: clear modern Japanese gothic, very bold headline, highly legible on a large venue screen.
+Visible text, verbatim and no other text:
+"KIMARI"
+"話すだけで、現場が決まる。"
+"打ち合わせの会話から、追加見積が必要な変更だけを見つける"
+"AI HACK 2026"
+"Mari（金子麻里）"
+"建築設計・施工管理 20年"
+Text hierarchy: KIMARI wordmark at upper left; headline dominant; short descriptor below; presenter line small at lower left.
+Constraints: spell every Japanese string and KIMARI exactly. Do not add, omit, rewrite, duplicate, or abbreviate text. Do not invent logos. Do not add people. No mockup frame, no card grid, no sci-fi glow, no watermark, no slide number.

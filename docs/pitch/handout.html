@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KIMARI｜ブース配布資料</title>
+<style>
+  :root{--navy:#06265a;--blue:#1168d8;--ink:#101828;--muted:#5e6b7e;--pale:#edf5ff;--line:#dbe4ef;--orange:#e66521;--green:#17865d}
+  *{box-sizing:border-box}html,body{margin:0;padding:0;background:#dfe5ec;color:var(--ink);font-family:"Yu Gothic UI","Hiragino Sans",Meiryo,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{width:210mm;height:297mm;margin:10mm auto;background:#fff;position:relative;overflow:hidden;padding:16mm 16mm 13mm;box-shadow:0 8px 30px #13243b22;display:flex;flex-direction:column}
+  .page:before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(17,104,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(17,104,216,.025) 1px,transparent 1px);background-size:12mm 12mm;pointer-events:none}
+  .page>*{position:relative;z-index:1}.top{display:flex;align-items:center;justify-content:space-between}.logo{width:45mm;height:auto}.label{font-size:9pt;font-weight:900;letter-spacing:.12em;color:var(--blue)}
+  h1{font-size:34pt;line-height:1.15;letter-spacing:-.055em;margin:14mm 0 5mm;color:var(--navy)}h1 span{color:var(--blue)}
+  .lead{font-size:15pt;line-height:1.75;font-weight:700;color:#40516a;margin:0 0 9mm}
+  .hero{background:linear-gradient(140deg,#f8fbff,#e7f2ff);border:1px solid #cfdceb;border-radius:5mm;padding:9mm;display:grid;grid-template-columns:1fr .95fr;gap:8mm;align-items:center}
+  .dialog{display:grid;gap:4mm}.bubble{background:#fff;border-radius:3mm;padding:4mm;box-shadow:0 3mm 8mm #103d7410}.bubble b{display:block;font-size:8pt;color:var(--blue);margin-bottom:2mm}.bubble p{font-size:11pt;line-height:1.55;margin:0;font-weight:700}
+  .decision{background:var(--navy);color:#fff;border-radius:4mm;padding:7mm}.decision small{font-size:8pt;color:#8fc3ff;font-weight:900;letter-spacing:.1em}.decision h2{font-size:19pt;margin:3mm 0 5mm}.decision dl{margin:0;display:grid;gap:3mm}.decision div{display:flex;justify-content:space-between;border-top:1px solid #34527a;padding-top:3mm;font-size:9pt}.decision dt{color:#aebed2}.decision dd{margin:0;font-weight:800}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin-top:9mm}.step{border-top:1.2mm solid var(--blue);padding:4mm 3mm 0}.step i{font-style:normal;font-size:8pt;color:var(--blue);font-weight:900;letter-spacing:.1em}.step h3{font-size:14pt;margin:2mm 0}.step p{font-size:9pt;line-height:1.65;color:var(--muted);margin:0}
+  .owner{margin-top:9mm;background:var(--navy);color:#fff;border-radius:4mm;padding:7mm;display:grid;grid-template-columns:.9fr 1.1fr;gap:7mm;align-items:center}.owner h2{font-size:18pt;line-height:1.45;margin:2mm 0 3mm}.owner p{font-size:9pt;color:#bed0e5;line-height:1.7;margin:0}.owner img{width:100%;border-radius:2mm;border:1px solid #ffffff33}
+  .footer{margin-top:auto;padding-top:5mm;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;color:#718096;font-size:8pt}.footer strong{color:var(--navy)}
+  .page2{background:linear-gradient(160deg,#fff 0%,#f3f8ff 100%)}.page2 h1{font-size:28pt;margin:10mm 0 4mm}.sublead{font-size:12pt;color:#4a5c72;line-height:1.7;margin:0 0 8mm}
+  .compare{display:grid;grid-template-columns:1fr 20mm 1fr;gap:4mm;align-items:center;background:#fff;border:1px solid var(--line);border-radius:4mm;padding:7mm}.compare article{text-align:center}.compare em{font-style:normal;font-size:9pt;color:#718096}.compare strong{display:block;font-size:36pt;color:var(--navy);letter-spacing:-.05em}.compare .after strong{color:#d99500}.compare b{text-align:center;font-size:22pt;color:#8aa2bf}.compare p{font-size:9pt;color:#607086;margin:2mm 0 0}
+  .proofs{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin:7mm 0}.proof{background:var(--navy);color:#fff;border-radius:3mm;padding:6mm}.proof small{font-size:8pt;color:#8fc3ff;font-weight:900}.proof strong{display:block;font-size:21pt;margin:3mm 0}.proof p{font-size:8.5pt;line-height:1.6;color:#becde0;margin:0}
+  .pricingTitle{display:flex;justify-content:space-between;align-items:end;margin:3mm 0}.pricingTitle h2{font-size:20pt;margin:0;color:var(--navy)}.pricingTitle span{font-size:8pt;color:#78869a}
+  .prices{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm}.plan{background:#fff;border:1px solid var(--line);border-radius:3mm;padding:5mm}.plan.hot{border:1mm solid var(--blue)}.plan small{color:var(--blue);font-weight:900;font-size:8pt}.plan h3{font-size:13pt;margin:2mm 0 3mm}.plan .yen{font-size:22pt;color:var(--navy);font-weight:900;letter-spacing:-.04em}.plan .yen span{font-size:8pt;color:#66768b}.plan p{font-size:8pt;line-height:1.55;color:#65758a;margin:2mm 0 0}
+  .cta{margin-top:8mm;background:#fff;border:1px solid var(--line);border-radius:4mm;padding:6mm;display:grid;grid-template-columns:1fr 28mm 1fr 28mm;gap:5mm;align-items:center}.cta h2{font-size:17pt;line-height:1.45;margin:0 0 2mm;color:var(--navy)}.cta p{font-size:8.5pt;color:#66768b;line-height:1.6;margin:0}.cta img{width:28mm;height:28mm}.qrLabel{font-size:8pt;font-weight:900;color:var(--blue);margin-bottom:2mm}
+  .honest{font-size:7.5pt;color:#718096;line-height:1.55;margin-top:4mm}
+  /* A4の印刷領域へ、QRとフッターまで確実に収める */
+  .page{padding:12mm 14mm 9mm}
+  h1{margin:8mm 0 3mm}.lead{font-size:14pt;line-height:1.65;margin-bottom:5mm}
+  .hero{padding:6mm;gap:6mm}.decision{padding:5mm}.decision h2{font-size:18pt;margin:2mm 0 4mm}
+  .steps{margin-top:5mm}.owner{margin-top:5mm;padding:5mm;gap:5mm}.owner h2{font-size:17pt;line-height:1.4;margin:2mm 0}
+  .page2 h1{font-size:27pt;margin:6mm 0 3mm}.sublead{font-size:11pt;line-height:1.6;margin-bottom:5mm}
+  .compare{padding:4mm}.proofs{margin:4mm 0}.proof{padding:4mm}.proof strong{font-size:19pt;margin:2mm 0}
+  .plan{padding:4mm}.cta{margin-top:4mm;padding:4mm;grid-template-columns:1fr 25mm 1fr 25mm;gap:4mm}.cta img{width:25mm;height:25mm}.cta h2{font-size:15pt}
+  .owner{height:47mm;overflow:hidden}.owner img{height:36mm;object-fit:cover;object-position:top}.owner p{font-size:8pt;line-height:1.55}
+  .compare{height:32mm}.compare strong{font-size:29pt}.compare p{margin-top:1mm}
+  .proofs{height:46mm}.proof{height:46mm}.proof strong{font-size:16pt;line-height:1.2}.proof p{font-size:7.3pt;line-height:1.45}
+  .pricingTitle{margin:2mm 0}.pricingTitle h2{font-size:18pt}.prices{height:40mm}.plan{height:40mm}.plan h3{font-size:11pt;margin:1mm 0}.plan .yen{font-size:19pt}.plan p{font-size:7pt;line-height:1.4;margin-top:1mm}
+  .cta{height:36mm}.cta h2{font-size:13pt;line-height:1.35}.cta p{font-size:7.2pt;line-height:1.4}.honest{font-size:6.6pt;line-height:1.35;margin-top:2mm}
+  /* 意味のある差し色：追加見積はオレンジ、共有・安心はグリーン */
+  .decision{border-top:2mm solid var(--orange)}.decision h2{color:#ffb083}
+  .step:nth-child(2){border-top-color:var(--green)}.step:nth-child(2) i{color:var(--green)}
+  .step:nth-child(3){border-top-color:var(--orange)}.step:nth-child(3) i{color:var(--orange)}
+  .owner{border-left:2mm solid var(--green)}.owner .label{color:#66d5ad}
+  .proofs .proof:nth-child(1){background:#0b5948}.proofs .proof:nth-child(2){background:#8f3e18}.proofs .proof:nth-child(3){background:var(--navy)}
+  .plan:first-child{border-top:1.5mm solid var(--green)}.plan:first-child small,.plan:first-child .yen{color:var(--green)}
+  .plan.hot{border-color:var(--orange)}.plan.hot small,.plan.hot .yen{color:var(--orange)}
+  .plan:last-child{border-top:1.5mm solid var(--blue)}
+  .cta{border-top:1.5mm solid var(--orange);box-shadow:0 3mm 10mm #102a4b0b}
+  @page{size:A4;margin:0}@media print{html,body{background:#fff}.page{margin:0;box-shadow:none;page-break-after:always}.page:last-child{page-break-after:auto}}
+</style>
+</head>
+<body>
+<section class="page">
+  <div class="top"><img class="logo" src="logo.png" alt="KIMARI"><span class="label">RENOVATION AI AGENT</span></div>
+  <h1>話すだけで、<br><span>現場が決まる。</span></h1>
+  <p class="lead">打ち合わせの会話から、追加見積が必要な変更だけを見つけ、<br>施主・職人・社内へ、次に必要な情報を届けます。</p>
+  <div class="hero">
+    <div class="dialog">
+      <div class="bubble"><b>施主</b><p>「キッチン、60センチ<br>寄せられないかな」</p></div>
+      <div class="bubble"><b>担当者</b><p>「給排水の移設が<br>必要になります」</p></div>
+    </div>
+    <div class="decision"><small>KIMARI AI</small><h2>追加見積が必要です</h2><dl><div><dt>見積項目</dt><dd>給排水 移設工事</dd></div><div><dt>数量</dt><dd>1式</dd></div><div><dt>根拠</dt><dd>原文へ戻って確認</dd></div></dl></div>
+  </div>
+  <div class="steps">
+    <article class="step"><i>STEP 01 · RECORD</i><h3>打ち合わせを録る</h3><p>スマートフォンで録音。設計打ち合わせも現場打ち合わせも、プロジェクトへ残します。</p></article>
+    <article class="step"><i>STEP 02 · UNDERSTAND</i><h3>AIが判断を整理</h3><p>決定・追加見積・保留・認識のズレを分け、担当者と期限まで整理します。</p></article>
+    <article class="step"><i>STEP 03 · ESTIMATE</i><h3>追加見積につなぐ</h3><p>工程と当初見積を踏まえ、元の契約から増えた工事項目だけを候補にします。</p></article>
+  </div>
+  <div class="owner"><div><span class="label">FOR HOMEOWNERS</span><h2>家ができるまでを、<br>一枚のWebページに。</h2><p>初回打ち合わせから引き渡しまで、決定・図面・写真・見積を時系列で共有。気になった記録から、そのまま質問できます。</p></div><img src="owner.png" alt="施主ページ"></div>
+  <div class="footer"><strong>AI HACK 2026｜KIMARI</strong><span>Mari（金子麻里）｜建築設計・施工管理 20年</span></div>
+</section>
+
+<section class="page page2">
+  <div class="top"><img class="logo" src="logo.png" alt="KIMARI"><span class="label">BUILT FOR THE REAL WORLD</span></div>
+  <h1>一般論ではなく、<br>その現場の「契約との差分」を出す。</h1>
+  <p class="sublead">AIが最初に出した33項目は、必要な工事の全部でした。しかし解体後の追加見積として使えたのは4項目だけ。そこで工程と当初見積書を判定に組み込みました。</p>
+  <div class="compare"><article><em>見積提出・契約前</em><strong>16</strong><p>見積候補／51秒</p></article><b>→</b><article class="after"><em>解体確認・契約後</em><strong>3</strong><p>見積候補／32秒</p></article></div>
+  <div class="proofs">
+    <article class="proof"><small>SECURITY</small><strong>音声を外に出さない</strong><p>自社サーバーで文字起こし。個人情報を伏せたテキストだけをLLMへ送信します。</p></article>
+    <article class="proof"><small>LLM COST</small><strong>1件 0.42円</strong><p>仕分け・3文書・翻訳までの実測値。高価なモデル直指定の約270分の1。</p></article>
+    <article class="proof"><small>HUMAN IN THE LOOP</small><strong>最後は人が承認</strong><p>AIは価格を決めません。根拠と候補を示し、担当者の確認後に共有します。</p></article>
+  </div>
+  <div class="pricingTitle"><h2>料金プラン（提供予定）</h2><span>記録を作る人が払い、読む人は無料</span></div>
+  <div class="prices">
+    <article class="plan"><small>施主・職人</small><h3>共有・現場参加</h3><div class="yen">0<span>円／月</span></div><p>施主ページの閲覧、質問、職人による現場録音・送信。</p></article>
+    <article class="plan hot"><small>一人親方・個人設計</small><h3>パーソナル</h3><div class="yen">1,980<span>円／月</span></div><p>文字起こし、仕分け、追加見積候補、3文書、施主ページ。</p></article>
+    <article class="plan"><small>工務店・設計事務所</small><h3>チーム・5名まで</h3><div class="yen">9,800<span>円／月</span></div><p>全機能に加え、会社ごとの判定ルールと権限管理。</p></article>
+  </div>
+  <div class="cta">
+    <div><div class="qrLabel">LIVE DEMO</div><h2>実際に動くKIMARIを<br>お試しください。</h2><p>ログイン不要。保存済みの打ち合わせから、仕分け・拾い出し・文書生成を体験できます。</p></div><img src="qr-demo.png" alt="デモQRコード">
+    <div><div class="qrLabel">DEVELOPMENT STORY</div><h2>20年の現場経験から、<br>どう作ったか。</h2><p>Zennで、33項目を作り直した過程、原価、安全性、失敗まで公開しています。</p></div><img src="qr-article.png" alt="Zenn記事QRコード">
+  </div>
+  <p class="honest">※ KIMARIは本番利用を想定して開発したAI HACK 2026参加作品です。実際のリノベーション現場への導入実績はまだありません。料金は正式提供前の予定価格です。AI処理原価にはサーバーなどの運用費を含みません。</p>
+  <div class="footer"><strong>話すだけで、現場が決まる。</strong><span>https://kimari.vercel.app/lp</span></div>
+</section>
+</body>
+</html>

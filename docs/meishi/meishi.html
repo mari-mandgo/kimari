@@ -1,0 +1,124 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>名刺｜株式会社M&Go 金子麻里</title>
+<style>
+  /*
+    名刺の版下。
+    仕上がり 91×55mm。塗り足し3mmを足して 97×61mm で出力する。
+
+    断裁は必ずずれる。ずれても文字が切れないよう、
+    仕上がり線からさらに3mm内側（＝紙の端から6mm）より内には文字を置かない。
+    ここを守らないと、刷り上がって初めて気づくことになる。
+
+    画像生成では作らない。日本語の細かい文字は生成AIが正確に描けず、
+    電話番号が1文字化けただけで全部刷り直しになる。
+  */
+  @page { size: 97mm 61mm; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal: #8BC5D1;   /* ブランドの青緑 */
+    --pink: #FFC5D9;   /* ブランドのピンク */
+    --ink:  #2b3440;
+    --sub:  #6b7684;
+  }
+
+  body {
+    font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", Meiryo, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    color: var(--ink);
+  }
+
+  .card {
+    position: relative;
+    width: 97mm; height: 61mm;      /* 塗り足し込み */
+    background: #fff;
+    overflow: hidden;
+    page-break-after: always;
+    /* 仕上がり(91×55)の外側3mmが塗り足し。文字はさらに3mm内へ */
+    padding: 8mm 10mm 7.5mm;
+    /* 3つの塊を上・中・下へ均等に散らす。margin:auto を重ねると余白が潰れる */
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .card:last-child { page-break-after: auto; }
+
+  /* 塗り足し領域に届かせる色面。断裁がずれても白フチが出ない */
+  .bleedBar {
+    position: absolute; left: 0; top: 0; width: 100%; height: 2.2mm;
+    background: linear-gradient(90deg, var(--teal) 0%, var(--teal) 52%, var(--pink) 52%, var(--pink) 100%);
+  }
+
+  /* ───────── 表 ───────── */
+  /* ロゴは 1000×200px。幅26mmで約980dpi出るので印刷に足りる */
+  .logo img { width: 26mm; height: auto; display: block; }
+  .brandSub { font-size: 6pt; color: var(--sub); letter-spacing: .12em; margin-top: 2mm; }
+
+  .role { font-size: 7pt; color: var(--sub); letter-spacing: .1em; }
+  .name { font-size: 16pt; font-weight: 700; letter-spacing: .14em; margin-top: 1.4mm; }
+  .nameEn { font-size: 6.4pt; color: var(--sub); letter-spacing: .16em; margin-top: 1.6mm; }
+
+  .frontFoot {
+    padding-top: 2.4mm; border-top: 0.3mm solid #e3e8ec;
+    font-size: 6.4pt; line-height: 1.7; color: var(--sub);
+  }
+
+  /* ───────── 裏 ───────── */
+  .lead { font-size: 9.5pt; font-weight: 700; line-height: 1.65; letter-spacing: .02em; }
+  .lead .hl { color: var(--teal); }
+  .leadSub { font-size: 6.2pt; color: var(--sub); line-height: 1.75; margin-top: 1.8mm; }
+
+  .backBody { display: flex; align-items: flex-end; gap: 6mm; }
+  .contact { flex: 1; font-size: 7pt; line-height: 1.95; }
+  .contact dt {
+    display: inline-block; width: 11mm; color: var(--sub);
+    font-size: 6pt; letter-spacing: .1em;
+  }
+  .contact dd { display: inline; }
+  .qr { text-align: center; flex: none; }
+  .qr img { width: 15mm; height: 15mm; display: block; }
+  .qr span { display: block; font-size: 5.6pt; color: var(--sub); margin-top: 0.8mm; letter-spacing: .06em; }
+</style>
+
+<!-- ═══════════ 表 ═══════════ -->
+<div class="card">
+  <div class="bleedBar"></div>
+
+  <div class="logo">
+    <img src="logo-mgo.png" alt="M&amp;GO">
+    <p class="brandSub">株式会社M&amp;Go</p>
+  </div>
+
+  <div class="nameBlock">
+    <p class="role">代表取締役</p>
+    <p class="name">金子　麻里</p>
+    <p class="nameEn">MARI KANEKO</p>
+  </div>
+
+  <div class="frontFoot">
+    〒151-0071　東京都渋谷区本町2-39-17<br>
+    m-go.asia
+  </div>
+</div>
+
+<!-- ═══════════ 裏 ═══════════ -->
+<div class="card">
+  <div class="bleedBar"></div>
+
+  <div>
+    <p class="lead">AIと話すだけで、<br><span class="hl">仕事が進む</span>仕組みをつくっています。</p>
+    <p class="leadSub">SNS運用の自動化 ／ 業務のAI化 ／ 仕組みづくりの伴走</p>
+  </div>
+
+  <div class="backBody">
+    <dl class="contact">
+      <div><dt>TEL</dt><dd>080-5432-9732</dd></div>
+      <div><dt>MAIL</dt><dd>m.kaneko@m-go.asia</dd></div>
+      <div><dt>WEB</dt><dd>m-go.asia</dd></div>
+      <div><dt>X</dt><dd>@mariSNSconsul</dd></div>
+    </dl>
+    <div class="qr">
+      <img src="qr-hp.png" alt="">
+      <span>m-go.asia</span>
+    </div>
+  </div>
+</div>
